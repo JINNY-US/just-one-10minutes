@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>아늑한 카페</title>
+    <style>
+        :root {
+            --primary-color: #6D4C41; /* Dark Brown */
+            --secondary-color: #A1887F; /* Medium Brown */
+            --accent-color: #FFB74D; /* Amber for highlights */
+            --light-bg: #F5F5F5; /* Light Grey for backgrounds */
+            --dark-text: #3E2723; /* Very Dark Brown for text */
+            --medium-text: #5D4037;
+            --shadow-light: rgba(0, 0, 0, 0.1);
+            --shadow-medium: rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            font-family: 'Segoe UI', '맑은 고딕', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+            margin: 0;
+            line-height: 1.6;
+            color: var(--dark-text);
+            background-color: var(--light-bg);
+            scroll-behavior: smooth;
+        }
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            overflow: hidden;
+            padding: 0 20px;
+        }
+        header {
+            background: var(--primary-color);
+            color: #fff;
+            padding: 60px 0;
+            text-align: center;
+            box-shadow: 0 4px 8px var(--shadow-medium);
+        }
+        header h1 {
+            margin: 0;
+            font-size: 3.5em;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px var(--shadow-medium);
+        }
+        header p {
+            font-size: 1.3em;
+            margin-top: 15px;
+            font-weight: 300;
+        }
+
+        /* Navigation Bar */
+        nav {
+            background: var(--secondary-color);
+            color: #fff;
+            padding: 15px 0;
+            text-align: center;
+            box-shadow: 0 2px 5px var(--shadow-light);
+        }
+        nav ul {
+            padding: 0;
+            list-style: none;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+        }
+        nav ul li {
+            margin: 0 20px;
+        }
+        nav ul li a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            padding: 5px 0;
+            transition: color 0.3s ease, border-bottom 0.3s ease;
+        }
+        nav ul li a:hover {
+            color: var(--accent-color);
+            border-bottom: 2px solid var(--accent-color);
+        }
+
+        section {
+            padding: 60px 0;
+            margin-bottom: 30px;
+            background-color: #fff;
+            box-shadow: 0 2px 10px var(--shadow-light);
+            border-radius: 8px;
+            animation: fadeIn 1s ease-out;
+        }
+        section:nth-of-type(even) {
+            background-color: #F8F8F8; /* Slightly different background for alternating sections */
+        }
+        section:last-of-type {
+            margin-bottom: 0;
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 40px;
+            font-size: 2.8em;
+            position: relative;
+        }
+        h2::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: -15px;
+            transform: translateX(-50%);
+            width: 70px;
+            height: 3px;
+            background-color: var(--accent-color);
+            border-radius: 5px;
+        }
+
+        .about-content {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            text-align: center;
+        }
+        .about-content p {
+            flex-basis: 45%;
+            font-size: 1.1em;
+            line-height: 1.8;
+            background: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px var(--shadow-light);
+        }
+
+        .menu-items, .specials-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            padding: 20px 0;
+        }
+        .menu-item, .special-item {
+            background: var(--light-bg);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px var(--shadow-light);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .menu-item:hover, .special-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px var(--shadow-medium);
+        }
+        .menu-item h3, .special-item h3 {
+            color: var(--medium-text);
+            margin-top: 0;
+            font-size: 1.8em;
+            font-family: 'Gungseo', serif; /* Changed '궁서체' to 'Gungseo' for better cross-browser compatibility */
+            margin-bottom: 10px;
+        }
+        .menu-item p, .special-item p {
+            font-size: 1.05em;
+            color: #666;
+            flex-grow: 1;
+        }
+        .menu-item .price, .special-item .price {
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 1.2em;
+            margin-top: 15px;
+        }
+        .special-item {
+            background-color: #FFFDE7; /* Lighter, yellowish background for specials */
+            border: 2px dashed var(--accent-color);
+        }
+        .special-item h3 {
+            color: var(--primary-color);
+        }
+        .special-item .price {
+            color: #D84315; /* Orange-red for special prices */
+            font-size: 1.3em;
+        }
+
+
+        .contact-info {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 25px;
+            text-align: center;
+        }
+        .contact-detail {
+            flex-basis: 30%;
+            padding: 30px 15px;
+            background: var(--light-bg);
+            border-radius: 10px;
+            box-shadow: 0 2px 8px var(--shadow-light);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .contact-detail:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px var(--shadow-medium);
+        }
+        .contact-detail h3 {
+            color: var(--medium-text);
+            margin-top: 0;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+        .contact-detail p {
+            margin: 5px 0;
+            color: #555;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            background: var(--primary-color);
+            color: #fff;
+            margin-top: 40px;
+            box-shadow: 0 -4px 8px var(--shadow-medium);
+        }
+        footer p {
+            margin: 0;
+            font-size: 0.9em;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2.5em;
+            }
+            header p {
+                font-size: 1em;
+            }
+            h2 {
+                font-size: 2em;
+            }
+            .about-content p {
+                flex-basis: 100%;
+            }
+            .menu-items, .specials-content, .contact-info {
+                grid-template-columns: 1fr;
+            }
+            .menu-item, .special-item, .contact-detail {
+                width: 100%;
+            }
+            nav ul li {
+                margin: 0 10px;
+            }
+            nav ul li a {
+                font-size: 0.9em;
+            }
+            section {
+                padding: 40px 0;
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>☕ 아늑한 카페 ☕</h1>
+            <p>일상 속 작은 쉼표, 향기로운 커피 한 잔의 여유</p>
+        </div>
+    </header>
+
+    <nav>
+        <div class="container">
+            <ul>
+                <li><a href="#about">소개</a></li>
+                <li><a href="#menu">메뉴</a></li>
+                <li><a href="#specials">특별 메뉴</a></li>
+                <li><a href="#contact">오시는 길</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section id="about">
+        <div class="container">
+            <h2>저희 카페를 소개합니다</h2>
+            <div class="about-content">
+                <p>아늑한 카페는 바쁜 도시 속에서 잠시 쉬어갈 수 있는 따뜻하고 편안한 공간입니다. 신선한 원두로 내린 특별한 커피와 수제 디저트로 여러분의 일상에 작은 행복을 선사합니다.</p>
+                <p>친절한 서비스와 아늑한 분위기에서 소중한 사람들과의 시간을 보내거나, 혼자만의 여유를 즐겨보세요. 언제나 여러분을 환영합니다!</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="menu">
+        <div class="container">
+            <h2>메뉴</h2>
+            <div class="menu-items">
+                <div class="menu-item">
+                    <h3>아메리카노</h3>
+                    <p>깊고 진한 풍미의 에스프레소에 따뜻한 물을 더한 기본 커피</p>
+                    <p>가격: 4,000원</p>
+                </div>
+                <div class="menu-item">
+                    <h3>카페 라떼</h3>
+                    <p>부드러운 우유와 에스프레소가 어우러진 고소한 라떼</p>
+                    <p>가격: 4,500원</p>
+                </div>
+                <div class="menu-item">
+                    <h3>카라멜 마끼아또</h3>
+                    <p>달콤한 카라멜 시럽과 에스프레소, 우유의 조화</p>
+                    <p>가격: 5,000원</p>
+                </div>
+                <div class="menu-item">
+                    <h3>수제 티라미수</h3>
+                    <p>마스카르포네 치즈와 커피의 완벽한 조화</p>
+                    <p>가격: 6,500원</p>
+                </div>
+                <div class="menu-item">
+                    <h3>초콜릿 브라우니</h3>
+                    <p>진한 초콜릿의 풍미가 가득한 꾸덕한 브라우니</p>
+                    <p>가격: 5,500원</p>
+                </div>
+                <div class="menu-item">
+                    <h3>제철 과일 타르트</h3>
+                    <p>신선한 제철 과일이 듬뿍 올라간 바삭한 타르트</p>
+                    <p>가격: 7,000원</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="specials">
+        <div class="container">
+            <h2>오늘의 특별 메뉴</h2>
+            <div class="specials-content">
+                <div class="special-item">
+                    <h3>🍓 딸기 치즈 타르트 🍓</h3>
+                    <p>제철 딸기와 부드러운 크림치즈의 완벽한 조화! 한정 수량으로 만나보세요.</p>
+                    <p class="price">7,500원</p>
+                </div>
+                <div class="special-item">
+                    <h3>☕ 핸드드립 예가체프 ☕</h3>
+                    <p>에티오피아 예가체프 원두로 정성껏 내린 향긋한 스페셜티 커피.</p>
+                    <p class="price">6,000원</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact">
+        <div class="container">
+            <h2>찾아오시는 길</h2>
+            <div class="contact-info">
+                <div class="contact-detail">
+                    <h3>주소</h3>
+                    <p>서울특별시 강남구 아늑한길 123</p>
+                </div>
+                <div class="contact-detail">
+                    <h3>영업 시간</h3>
+                    <p>월-금: 08:00 - 22:00</p>
+                    <p>토-일: 10:00 - 20:00</p>
+                </div>
+                <div class="contact-detail">
+                    <h3>연락처</h3>
+                    <p>전화: 02-1234-5678</p>
+                    <p>이메일: cozycafe@example.com</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 아늑한 카페. 모든 권리 보유.</p>
+        </div>
+    </footer>
+</body>
+</html>

@@ -2,10 +2,12 @@ const gameBoard = document.getElementById('game-board');
 const scoreDisplay = document.getElementById('score');
 const timerBar = document.getElementById('timer-bar');
 const resetBtn = document.getElementById('reset-btn');
+const startOverlay = document.getElementById('start-overlay');
+const startBtn = document.getElementById('start-btn');
 
 let score = 0;
 let stage = 1;
-const LIMIT_TIME = 15; // 15초 제한
+const LIMIT_TIME = 15; 
 let timeLeft = LIMIT_TIME;
 let timerInterval;
 
@@ -17,7 +19,6 @@ function getRandomColor() {
 }
 
 function updateTimerDisplay() {
-    // 남은 시간에 따라 바의 너비(%) 계산
     const widthPercent = (timeLeft / LIMIT_TIME) * 100;
     timerBar.style.width = `${widthPercent}%`;
 }
@@ -27,7 +28,6 @@ function startTimer() {
     timeLeft = LIMIT_TIME;
     updateTimerDisplay();
     
-    // 100ms마다 실행하여 더 부드러운 애니메이션 효과
     timerInterval = setInterval(() => {
         timeLeft -= 0.1;
         updateTimerDisplay();
@@ -60,12 +60,12 @@ function createBoard() {
                 stage++;
                 scoreDisplay.textContent = `Score: ${score}`;
                 createBoard();
-                startTimer(); // 정답 시 시간 초기화
+                startTimer();
             };
         } else {
             tile.style.backgroundColor = `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`;
             tile.onclick = () => {
-                timeLeft -= 3; // 오답 시 3초 감점
+                timeLeft -= 3;
                 if (timeLeft < 0) timeLeft = 0;
                 updateTimerDisplay();
                 tile.style.opacity = '0.5';
@@ -81,11 +81,19 @@ function resetGame() {
     score = 0;
     stage = 1;
     scoreDisplay.textContent = `Score: ${score}`;
+    timerBar.style.width = '100%';
+    startOverlay.style.display = 'flex'; // 시작 버튼 다시 표시
+}
+
+startBtn.onclick = () => {
+    startOverlay.style.display = 'none';
     createBoard();
     startTimer();
-}
+};
 
 resetBtn.onclick = resetGame;
 
-// 초기 게임 시작
-resetGame();
+// 초기 보드 설정 (2x2 빈 칸 보여주기용)
+createBoard();
+clearInterval(timerInterval);
+timerBar.style.width = '100%';

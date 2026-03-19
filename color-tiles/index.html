@@ -10,14 +10,18 @@
 <body>
     <div class="game-container">
         <h1>COLOR TILES</h1>
-        <!-- 타이머 바 추가 -->
         <div id="timer-container">
             <div id="timer-bar"></div>
         </div>
         
-        <div id="game-board" class="grid-2"></div>
+        <div id="board-container">
+            <div id="game-board" class="grid-2"></div>
+            <!-- 시작 버튼 오버레이 -->
+            <div id="start-overlay">
+                <button id="start-btn">시작하기</button>
+            </div>
+        </div>
         
-        <!-- 점수 위치 변경 -->
         <div id="score">Score: 0</div>
         
         <div class="controls">

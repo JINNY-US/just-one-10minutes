@@ -9,8 +9,19 @@
 <body>
     <div class="game-container">
         <h1>Tile Memory</h1>
-        <div id="timer">남은 시간: 10초</div>
-        <div id="game-board"></div>
+        <!-- 타이머 바 추가 -->
+        <div id="timer-container">
+            <div id="timer-bar"></div>
+        </div>
+
+        <div id="board-container">
+            <div id="game-board"></div>
+            <!-- 시작 버튼 오버레이 -->
+            <div id="start-overlay">
+                <button id="start-btn">시작하기</button>
+            </div>
+        </div>
+
         <div id="score">Score: 0</div>
         <div class="controls">
             <button id="reset-button">다시하기</button>

@@ -1,7 +1,9 @@
 const gameBoard = document.getElementById('game-board');
 const scoreDisplay = document.getElementById('score');
-const timerDisplay = document.getElementById('timer');
+const timerBar = document.getElementById('timer-bar');
 const resetButton = document.getElementById('reset-button');
+const startOverlay = document.getElementById('start-overlay');
+const startBtn = document.getElementById('start-btn');
 
 const TILES_COUNT = 16; 
 let sequence = [];
@@ -9,7 +11,8 @@ let playerSequence = [];
 let score = 0;
 let canClick = false;
 let timeoutId;
-let timeLeft = 10; // 초기 제한 시간
+let timeLeft = 10;
+let maxTime = 10;
 let timerInterval;
 
 function initializeBoard() {
@@ -23,34 +26,39 @@ function initializeBoard() {
     }
 }
 
+function updateTimerDisplay() {
+    const widthPercent = (timeLeft / maxTime) * 100;
+    timerBar.style.width = `${widthPercent}%`;
+}
+
 function startTimer() {
     clearInterval(timerInterval);
-    // 스테이지가 올라갈 때마다 추가 시간을 줌 (기본 10초 + 시퀀스 길이 당 1초)
-    timeLeft = 10 + sequence.length;
-    timerDisplay.textContent = `남은 시간: ${timeLeft}초`;
+    maxTime = 10 + sequence.length;
+    timeLeft = maxTime;
+    updateTimerDisplay();
 
     timerInterval = setInterval(() => {
-        timeLeft--;
-        timerDisplay.textContent = `남은 시간: ${timeLeft}초`;
+        timeLeft -= 0.1;
+        updateTimerDisplay();
         if (timeLeft <= 0) {
             clearInterval(timerInterval);
             alert(`시간 초과! 게임 오버! 점수: ${score}`);
             resetGame();
         }
-    }, 1000);
+    }, 100);
 }
 
 function startRound() {
     canClick = false;
     playerSequence = [];
     scoreDisplay.textContent = `Score: ${score}`;
-    timerDisplay.textContent = `준비하세요!`;
-    clearInterval(timerInterval); // 시퀀스 보여주는 동안에는 타이머 멈춤
+    timerBar.style.width = '100%';
+    clearInterval(timerInterval);
 
     const randomTile = Math.floor(Math.random() * TILES_COUNT);
     sequence.push(randomTile);
 
-    setTimeout(displaySequence, 500); // 0.5초 대기 후 시작
+    setTimeout(displaySequence, 500);
 }
 
 function displaySequence() {
@@ -70,7 +78,7 @@ function displaySequence() {
             }, 500);
         } else {
             canClick = true;
-            startTimer(); // 시퀀스 보기가 끝나면 타이머 시작
+            startTimer();
         }
     }
     showNextTile();
@@ -102,8 +110,7 @@ function checkPlayerSequence() {
         score++;
         scoreDisplay.textContent = `Score: ${score}`;
         canClick = false;
-        clearInterval(timerInterval); // 정답 시 타이머 멈춤
-        clearTimeout(timeoutId);
+        clearInterval(timerInterval);
         setTimeout(startRound, 1000);
     }
 }
@@ -122,17 +129,17 @@ function resetGame() {
     playerSequence = [];
     score = 0;
     scoreDisplay.textContent = `Score: ${score}`;
-    timerDisplay.textContent = `남은 시간: 10초`;
-    clearTimeout(timeoutId);
-    const tiles = document.querySelectorAll('.tile');
-    tiles.forEach(tile => tile.classList.add('wrong'));
-    setTimeout(() => {
-        tiles.forEach(tile => tile.classList.remove('wrong'));
-        startRound();
-    }, 1000);
+    timerBar.style.width = '100%';
+    startOverlay.style.display = 'flex'; // 시작 버튼 다시 표시
 }
+
+startBtn.onclick = () => {
+    startOverlay.style.display = 'none';
+    initializeBoard();
+    startRound();
+};
 
 resetButton.addEventListener('click', resetGame);
 
+// 초기 보드 세팅만 해둠
 initializeBoard();
-startRound();
