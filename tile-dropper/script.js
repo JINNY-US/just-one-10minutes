@@ -2,9 +2,22 @@ const WIDTH = 23;
 const HEIGHT = 15;
 const MAX_TIME = 120;
 
-const COLORS = [
+/*const COLORS = [
   "#ffadad","#a0c4ff","#caffbf","#ffd6a5","#bdb2ff",
   "#ffc6ff","#9bf6ff","#fdffb6","#d0f4de","#e4c1f9"
+];*/
+
+const COLORS = [
+  "#FF4136", // 빨강
+  "#FF851B", // 주황
+  "#FFDC00", // 노랑
+  "#2ECC40", // 초록
+  "#0074D9", // 파랑
+  "#bdb2ff", // 파스텔보라
+  "#ffadad", // 핑크
+  "#39CCCC", // 청록
+  "#fdffb6", // 파스텔노랑
+  "#3D9970"  // 올리브톤
 ];
 
 let grid = [];
@@ -23,6 +36,24 @@ const overlay = document.getElementById("start-overlay");
 
 const popSound = document.getElementById("popSound");
 const failSound = document.getElementById("failSound");
+const toggle = document.getElementById("darkModeToggle");
+
+// 저장된 상태 불러오기
+if (localStorage.getItem("darkMode") === "on") {
+  document.body.classList.add("dark");
+  toggle.checked = true;
+}
+
+// 토글 이벤트
+toggle.addEventListener("change", () => {
+  if (toggle.checked) {
+    document.body.classList.add("dark");
+    localStorage.setItem("darkMode", "on");
+  } else {
+    document.body.classList.remove("dark");
+    localStorage.setItem("darkMode", "off");
+  }
+});
 
 // 초기 화면
 generateGrid();
