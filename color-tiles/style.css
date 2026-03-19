@@ -57,7 +57,13 @@ body {
     margin-bottom: 10px;
 }
 
-#reset-btn {
+.controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+#reset-btn, .home-btn {
     padding: 10px 20px;
     font-size: 1rem;
     cursor: pointer;
@@ -65,9 +71,18 @@ body {
     color: white;
     border: none;
     border-radius: 5px;
+    text-decoration: none;
     transition: background-color 0.2s ease;
+}
+
+.home-btn {
+    background-color: #6c757d;
 }
 
 #reset-btn:hover {
     background-color: #2980b9;
+}
+
+.home-btn:hover {
+    background-color: #5a6268;
 }
