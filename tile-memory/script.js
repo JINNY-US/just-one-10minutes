@@ -1,5 +1,6 @@
 const gameBoard = document.getElementById('game-board');
 const scoreDisplay = document.getElementById('score');
+const timerDisplay = document.getElementById('timer');
 const resetButton = document.getElementById('reset-button');
 
 const TILES_COUNT = 16; 
@@ -8,6 +9,8 @@ let playerSequence = [];
 let score = 0;
 let canClick = false;
 let timeoutId;
+let timeLeft = 10; // 초기 제한 시간
+let timerInterval;
 
 function initializeBoard() {
     gameBoard.innerHTML = '';
@@ -20,15 +23,34 @@ function initializeBoard() {
     }
 }
 
+function startTimer() {
+    clearInterval(timerInterval);
+    // 스테이지가 올라갈 때마다 추가 시간을 줌 (기본 10초 + 시퀀스 길이 당 1초)
+    timeLeft = 10 + sequence.length;
+    timerDisplay.textContent = `남은 시간: ${timeLeft}초`;
+
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        timerDisplay.textContent = `남은 시간: ${timeLeft}초`;
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            alert(`시간 초과! 게임 오버! 점수: ${score}`);
+            resetGame();
+        }
+    }, 1000);
+}
+
 function startRound() {
     canClick = false;
     playerSequence = [];
     scoreDisplay.textContent = `Score: ${score}`;
+    timerDisplay.textContent = `준비하세요!`;
+    clearInterval(timerInterval); // 시퀀스 보여주는 동안에는 타이머 멈춤
 
     const randomTile = Math.floor(Math.random() * TILES_COUNT);
     sequence.push(randomTile);
 
-    displaySequence();
+    setTimeout(displaySequence, 500); // 0.5초 대기 후 시작
 }
 
 function displaySequence() {
@@ -48,6 +70,7 @@ function displaySequence() {
             }, 500);
         } else {
             canClick = true;
+            startTimer(); // 시퀀스 보기가 끝나면 타이머 시작
         }
     }
     showNextTile();
@@ -79,12 +102,14 @@ function checkPlayerSequence() {
         score++;
         scoreDisplay.textContent = `Score: ${score}`;
         canClick = false;
+        clearInterval(timerInterval); // 정답 시 타이머 멈춤
         clearTimeout(timeoutId);
         setTimeout(startRound, 1000);
     }
 }
 
 function gameOver() {
+    clearInterval(timerInterval);
     clearTimeout(timeoutId);
     canClick = false;
     alert(`Game Over! Your score: ${score}`);
@@ -92,10 +117,12 @@ function gameOver() {
 }
 
 function resetGame() {
+    clearInterval(timerInterval);
     sequence = [];
     playerSequence = [];
     score = 0;
     scoreDisplay.textContent = `Score: ${score}`;
+    timerDisplay.textContent = `남은 시간: 10초`;
     clearTimeout(timeoutId);
     const tiles = document.querySelectorAll('.tile');
     tiles.forEach(tile => tile.classList.add('wrong'));
