@@ -136,3 +136,117 @@ body {
 .home-btn:hover {
     background-color: #5a6268;
 }
+
+/* 토글 위치 */
+.dark-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 999;
+}
+
+/* 스위치 */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+}
+
+.switch input {
+  display: none;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  background: #ccc;
+  border-radius: 34px;
+  top: 0; left: 0; right: 0; bottom: 0;
+  transition: 0.3s;
+}
+
+.slider:after {
+  content: "🌙";
+  position: absolute;
+  right: 6px;
+  top: 3px;
+  font-size: 14px;
+}
+
+.slider:before {
+  content: "";
+  position: absolute;
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+/* ON 상태 */
+input:checked + .slider {
+  background: #4caf50;
+}
+
+input:checked + .slider:before {
+  transform: translateX(24px);
+}
+
+/* 🌙 다크모드 스타일 */
+body.dark {
+  background: #121212;
+  color: #eee;
+}
+
+/* 컨테이너 배경 */
+body.dark .game-container {
+  background: #1e1e1e;
+}
+
+/* 버튼 / 링크 색상 */
+body.dark button,
+body.dark .home-btn {
+  background: #333;
+  color: #eee;
+}
+
+/* 타이머 바 배경 */
+body.dark #timer-container {
+  background: #333;
+}
+
+/* 게임 보드 배경 */
+body.dark #game-board {
+  background: #181818;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+/* 게임 보드 컨테이너 */
+body.dark #board-container {
+  background: #181818;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+/* 점수 글자 색 */
+body.dark #score {
+  color: #ffffff;  /* 🔥 추가 */
+}
+
+/* 빈칸 타일 */
+body.dark .empty.light {
+  background: #2a2a2a;
+}
+
+body.dark .empty.dark {
+  background: #1f1f1f;
+}
+
+/* 타일 그림자 (대비 유지) */
+body.dark .tile:not(.empty) {
+  box-shadow: 0 1px 2px rgba(255,255,255,0.1);
+}
