@@ -8,7 +8,7 @@ const startBtn = document.getElementById('start-btn');
 let score = 0;
 let grid = [];
 let selectedTile = null;
-const LIMIT_TIME = 100; 
+const LIMIT_TIME = 120; // 초기 시간 120초로 연장
 let timeLeft = LIMIT_TIME;
 let timerInterval;
 let startTime = 0;
@@ -23,12 +23,17 @@ function initGame() {
     renderBoard();
 }
 
-// 진행 시간에 따라 생성되는 숫자의 범위를 조절하는 함수
+// 진행 시간에 따라 생성되는 숫자의 범위를 조절하고 작은 숫자 확률을 높인 함수
 function getRandomNumber() {
     const elapsedTime = (Date.now() - startTime) / 1000;
     
-    // 초반 1~20으로 시작, 60초에 걸쳐 최대 1~50까지 증가
-    let additionalRange = Math.min(elapsedTime * 0.5, 30); // 최대 30 추가
+    // 40% 확률로 무조건 1~15 사이의 아주 작은 숫자 생성 (계산 보조용)
+    if (Math.random() < 0.4) {
+        return Math.floor(Math.random() * 15) + 1;
+    }
+
+    // 나머지 60% 확률로는 시간에 따라 커지는 범위(최대 50)에서 생성
+    let additionalRange = Math.min(elapsedTime * 0.3, 30); // 성장 속도를 더 늦춤
     let maxRange = 20 + additionalRange; 
     
     return Math.floor(Math.random() * maxRange) + 1;
@@ -127,7 +132,7 @@ function updateTimerDisplay() {
     const widthPercent = (timeLeft / LIMIT_TIME) * 100;
     timerBar.style.width = `${widthPercent}%`;
     
-    if (timeLeft < 15) {
+    if (timeLeft < 20) { 
         timerBar.style.backgroundColor = "#ff0000";
     } else {
         timerBar.style.backgroundColor = "#e74c3c";
