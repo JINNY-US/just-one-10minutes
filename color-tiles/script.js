@@ -11,6 +11,25 @@ const LIMIT_TIME = 15;
 let timeLeft = LIMIT_TIME;
 let timerInterval;
 let lastTargetIndex = -1; // 이전 정답 위치 기억
+const toggle = document.getElementById("darkModeToggle");
+
+// 저장된 상태 불러오기
+if (localStorage.getItem("darkMode") === "on") {
+  document.body.classList.add("dark");
+  toggle.checked = true;
+}
+
+// 토글 이벤트
+toggle.addEventListener("change", () => {
+  if (toggle.checked) {
+    document.body.classList.add("dark");
+    localStorage.setItem("darkMode", "on");
+  } else {
+    document.body.classList.remove("dark");
+    localStorage.setItem("darkMode", "off");
+  }
+});
+
 
 function getRandomColor() {
     // 0~255 전체 범위를 사용하여 훨씬 다양한 색상 생성
