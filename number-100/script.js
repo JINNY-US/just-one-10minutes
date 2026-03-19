@@ -10,7 +10,7 @@ const sounds = {
     start: new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'),
     select: new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'),
     merge: new Audio('https://assets.mixkit.co/active_storage/sfx/2567/2568-preview.mp3'),
-    success: new Audio('https://www.myinstants.com/media/sounds/pop.mp3'),
+    success: new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'), // 확실히 재생되는 톡 터지는 소리
     gameOver: new Audio('https://assets.mixkit.co/active_storage/sfx/133/133-preview.mp3')
 };
 
