@@ -8,17 +8,28 @@ const startBtn = document.getElementById('start-btn');
 let score = 0;
 let grid = [];
 let selectedTile = null;
-const LIMIT_TIME = 60; // 60초 게임
+const LIMIT_TIME = 60; 
 let timeLeft = LIMIT_TIME;
 let timerInterval;
+let startTime = 0; // 게임 시작 시점 저장
 
 function initGame() {
     score = 0;
     timeLeft = LIMIT_TIME;
+    startTime = Date.now();
     scoreDisplay.textContent = `Score: ${score}`;
     updateTimerDisplay();
     createGrid();
     renderBoard();
+}
+
+// 진행 시간에 따라 생성되는 숫자의 범위를 조절하는 함수
+function getRandomNumber() {
+    const elapsedTime = (Date.now() - startTime) / 1000; // 경과 시간(초)
+    
+    // 초반 10초는 1~20, 이후 서서히 증가하여 50초 이후에는 1~99까지 생성
+    let maxRange = 20 + Math.min(elapsedTime * 1.6, 79); 
+    return Math.floor(Math.random() * maxRange) + 1;
 }
 
 function createGrid() {
@@ -26,7 +37,7 @@ function createGrid() {
     for (let r = 0; r < 4; r++) {
         let row = [];
         for (let c = 0; c < 4; c++) {
-            row.push(Math.floor(Math.random() * 99) + 1);
+            row.push(getRandomNumber());
         }
         grid.push(row);
     }
@@ -62,19 +73,20 @@ function handleTileClick(r, c) {
         const dr = Math.abs(selectedTile.r - r);
         const dc = Math.abs(selectedTile.c - c);
 
-        // 인접한 타일인지 확인 (가로세로 1칸)
         if ((dr === 1 && dc === 0) || (dr === 0 && dc === 1)) {
             const sum = grid[selectedTile.r][selectedTile.c] + grid[r][c];
 
             if (sum <= 100) {
                 if (sum === 100) {
-                    // 100 달성! 두 타일 모두 제거
                     grid[selectedTile.r][selectedTile.c] = 0;
                     grid[r][c] = 0;
                     score += 100;
                     scoreDisplay.textContent = `Score: ${score}`;
+                    
+                    // 시간 보너스: 5초 추가 (최대 LIMIT_TIME까지)
+                    timeLeft = Math.min(timeLeft + 5, LIMIT_TIME);
+                    updateTimerDisplay();
                 } else {
-                    // 100 미만, 합치기
                     grid[r][c] = sum;
                     grid[selectedTile.r][selectedTile.c] = 0;
                 }
@@ -82,12 +94,10 @@ function handleTileClick(r, c) {
                 selectedTile = null;
                 renderBoard();
             } else {
-                // 100 초과, 선택 해제
                 selectedTile = { r, c };
                 renderBoard();
             }
         } else {
-            // 인접하지 않은 타일 클릭 시 선택 변경
             selectedTile = { r, c };
             renderBoard();
         }
@@ -105,9 +115,8 @@ function applyGravity() {
                 grid[r][c] = 0;
             }
         }
-        // 맨 위에 새 숫자 생성
         for (let r = 0; r < emptySpaces; r++) {
-            grid[r][c] = Math.floor(Math.random() * 99) + 1;
+            grid[r][c] = getRandomNumber(); // 위에서 떨어지는 숫자도 난이도 반영
         }
     }
 }
@@ -115,6 +124,13 @@ function applyGravity() {
 function updateTimerDisplay() {
     const widthPercent = (timeLeft / LIMIT_TIME) * 100;
     timerBar.style.width = `${widthPercent}%`;
+    
+    // 시간이 얼마 남지 않았을 때 바 색상 변경 (선택 사항)
+    if (timeLeft < 10) {
+        timerBar.style.backgroundColor = "#ff0000";
+    } else {
+        timerBar.style.backgroundColor = "#e74c3c";
+    }
 }
 
 function startTimer() {
