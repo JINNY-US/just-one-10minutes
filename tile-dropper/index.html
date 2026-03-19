@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Tile Dropper</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="game-container">
+  <h1>TILE DROPPER</h1>
+
+  <!-- 타이머 -->
+  <div id="timer-container">
+    <div id="timer-bar"></div>
+  </div>
+
+  <!-- 보드 -->
+  <div id="board-container">
+    <div id="game"></div>
+
+    <!-- 시작 오버레이 -->
+    <div id="start-overlay">
+      <button id="start-btn">시작하기</button>
+    </div>
+  </div>
+
+  <div id="score">점수: 0</div>
+
+  <div class="controls">
+    <button id="reset-btn">다시하기</button>
+    <a href="../index.html" class="home-btn">돌아가기</a>
+  </div>
+</div>
+
+<audio id="popSound" src="https://cdn.jsdelivr.net/gh/jshawl/AudioFX/sounds/pop.mp3"></audio>
+<audio id="failSound" src="https://cdn.jsdelivr.net/gh/jshawl/AudioFX/sounds/error.mp3"></audio>
+
+<script src="script.js"></script>
+</body>
+</html>
