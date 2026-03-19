@@ -11,15 +11,33 @@ body {
 .game-container {
     text-align: center;
     background-color: white;
-    padding: 20px;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    width: 350px; /* 고정 너비로 안정감 제공 */
+}
+
+/* 타이머 컨테이너와 바 스타일 */
+#timer-container {
+    width: 100%;
+    height: 15px;
+    background-color: #e0e0e0;
     border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+#timer-bar {
+    width: 100%;
+    height: 100%;
+    background-color: #e74c3c; /* 빨간색 계열 */
+    transition: width 0.1s linear; /* 부드럽게 줄어드는 효과 */
 }
 
 #game-board {
     display: grid;
     gap: 10px;
-    margin: 20px auto;
+    margin: 0 auto 20px; /* 하단 마진 추가 */
     width: 300px;
     height: 300px;
 }
@@ -45,16 +63,11 @@ body {
     transform: scale(0.95);
 }
 
-#timer {
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #e74c3c;
-    margin-bottom: 10px;
-}
-
 #score {
-    font-size: 1.2rem;
-    margin-bottom: 10px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 20px; /* 버튼과의 간격 */
 }
 
 .controls {
