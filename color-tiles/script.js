@@ -10,11 +10,14 @@ let stage = 1;
 const LIMIT_TIME = 15; 
 let timeLeft = LIMIT_TIME;
 let timerInterval;
+let lastTargetIndex = -1; // 이전 정답 위치 기억
 
 function getRandomColor() {
-    const r = Math.floor(Math.random() * 150) + 50;
-    const g = Math.floor(Math.random() * 150) + 50;
-    const b = Math.floor(Math.random() * 150) + 50;
+    // 0~255 전체 범위를 사용하여 훨씬 다양한 색상 생성
+    // 정답 타일이 너무 밝아져서 안 보이는 것을 방지하기 위해 base는 최대 230으로 제한
+    const r = Math.floor(Math.random() * 200);
+    const g = Math.floor(Math.random() * 200);
+    const b = Math.floor(Math.random() * 200);
     return { r, g, b };
 }
 
@@ -46,14 +49,24 @@ function createBoard() {
     gameBoard.className = `grid-${size}`;
 
     const baseColor = getRandomColor();
-    const diff = Math.max(20 - Math.floor(stage / 3), 5);
-    const targetIndex = Math.floor(Math.random() * (size * size));
+    // 스테이지가 올라갈수록 색상 차이(diff)가 줄어듦 (최소 3까지)
+    const diff = Math.max(25 - Math.floor(stage / 2), 3);
+    
+    // 새로운 정답 위치 결정 (이전 위치와 겹치지 않게)
+    let targetIndex;
+    const totalTiles = size * size;
+    do {
+        targetIndex = Math.floor(Math.random() * totalTiles);
+    } while (targetIndex === lastTargetIndex && totalTiles > 1);
+    
+    lastTargetIndex = targetIndex; // 현재 위치 저장
 
-    for (let i = 0; i < size * size; i++) {
+    for (let i = 0; i < totalTiles; i++) {
         const tile = document.createElement('div');
         tile.classList.add('tile');
         
         if (i === targetIndex) {
+            // 정답 타일: 미세하게 다른 색
             tile.style.backgroundColor = `rgb(${baseColor.r + diff}, ${baseColor.g + diff}, ${baseColor.b + diff})`;
             tile.onclick = () => {
                 score += stage * 10;
@@ -63,13 +76,18 @@ function createBoard() {
                 startTimer();
             };
         } else {
+            // 일반 타일
             tile.style.backgroundColor = `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`;
             tile.onclick = () => {
                 timeLeft -= 3;
                 if (timeLeft < 0) timeLeft = 0;
                 updateTimerDisplay();
-                tile.style.opacity = '0.5';
-                setTimeout(() => { tile.style.opacity = '1'; }, 100);
+                
+                // 틀렸을 때 시각적 효과 (깜빡임)
+                tile.style.backgroundColor = '#ff0000';
+                setTimeout(() => {
+                    tile.style.backgroundColor = `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`;
+                }, 100);
             };
         }
         gameBoard.appendChild(tile);
@@ -80,9 +98,10 @@ function resetGame() {
     clearInterval(timerInterval);
     score = 0;
     stage = 1;
+    lastTargetIndex = -1;
     scoreDisplay.textContent = `Score: ${score}`;
     timerBar.style.width = '100%';
-    startOverlay.style.display = 'flex'; // 시작 버튼 다시 표시
+    startOverlay.style.display = 'flex';
 }
 
 startBtn.onclick = () => {
@@ -93,7 +112,7 @@ startBtn.onclick = () => {
 
 resetBtn.onclick = resetGame;
 
-// 초기 보드 설정 (2x2 빈 칸 보여주기용)
+// 초기 화면 설정
 createBoard();
 clearInterval(timerInterval);
 timerBar.style.width = '100%';
