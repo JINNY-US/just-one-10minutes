@@ -8,10 +8,10 @@ const startBtn = document.getElementById('start-btn');
 let score = 0;
 let grid = [];
 let selectedTile = null;
-const LIMIT_TIME = 60; 
+const LIMIT_TIME = 100; // 초기 시간 100초로 연장
 let timeLeft = LIMIT_TIME;
 let timerInterval;
-let startTime = 0; // 게임 시작 시점 저장
+let startTime = 0;
 
 function initGame() {
     score = 0;
@@ -25,10 +25,10 @@ function initGame() {
 
 // 진행 시간에 따라 생성되는 숫자의 범위를 조절하는 함수
 function getRandomNumber() {
-    const elapsedTime = (Date.now() - startTime) / 1000; // 경과 시간(초)
+    const elapsedTime = (Date.now() - startTime) / 1000;
     
-    // 초반 10초는 1~20, 이후 서서히 증가하여 50초 이후에는 1~99까지 생성
-    let maxRange = 20 + Math.min(elapsedTime * 1.6, 79); 
+    // 초반 범위 1~50으로 시작, 이후 서서히 증가하여 최대 99까지
+    let maxRange = 50 + Math.min(elapsedTime * 1.0, 49); 
     return Math.floor(Math.random() * maxRange) + 1;
 }
 
@@ -83,7 +83,7 @@ function handleTileClick(r, c) {
                     score += 100;
                     scoreDisplay.textContent = `Score: ${score}`;
                     
-                    // 시간 보너스: 5초 추가 (최대 LIMIT_TIME까지)
+                    // 시간 보너스: 5초 추가
                     timeLeft = Math.min(timeLeft + 5, LIMIT_TIME);
                     updateTimerDisplay();
                 } else {
@@ -116,7 +116,7 @@ function applyGravity() {
             }
         }
         for (let r = 0; r < emptySpaces; r++) {
-            grid[r][c] = getRandomNumber(); // 위에서 떨어지는 숫자도 난이도 반영
+            grid[r][c] = getRandomNumber();
         }
     }
 }
@@ -125,8 +125,7 @@ function updateTimerDisplay() {
     const widthPercent = (timeLeft / LIMIT_TIME) * 100;
     timerBar.style.width = `${widthPercent}%`;
     
-    // 시간이 얼마 남지 않았을 때 바 색상 변경 (선택 사항)
-    if (timeLeft < 10) {
+    if (timeLeft < 15) { // 위험 표시 기준도 15초로 소폭 조정
         timerBar.style.backgroundColor = "#ff0000";
     } else {
         timerBar.style.backgroundColor = "#e74c3c";
