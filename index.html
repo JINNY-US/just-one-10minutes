@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JUST ONE 10 MINUTES - 미니게임 포털</title>
-    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="style.css">
     <!-- Google Fonts 추가 (선택 사항) -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
 </head>
@@ -18,6 +18,12 @@
             </div>
         </header>
 
+<div class="dark-toggle">
+  <label class="switch">
+    <input type="checkbox" id="darkModeToggle">
+    <span class="slider"></span>
+  </label>
+</div>
         <main class="container">
             <section class="game-section">
                 <h2 class="section-title">플레이할 게임을 선택하세요</h2>
@@ -46,29 +52,28 @@
                         </div>
                     </a>
 
-                    <!-- Tile Dropper 게임 -->
-                    <a href="tile-dropper/index.html" class="game-card">
-                        <div class="card-inner">
-                            <div class="game-icon">💥</div>
-                            <div class="game-info">
-                                <h3>Tile Dropper</h3>
-                                <p>빈칸을 클릭해 같은 색 타일을 터뜨리세요!</p>
-                            </div>
-                            <span class="play-badge">PLAY</span>
-                        </div>
-                    </a>
-
                     <!-- Number 100 게임 -->
                     <a href="number-100/index.html" class="game-card">
                         <div class="card-inner">
                             <div class="game-icon">🔢</div>
                             <div class="game-info">
                                 <h3>Number 100</h3>
-                                <p>숫자들을 합쳐 정확히 100을 만드세요!</p>
+                                <p>숫자들을 합쳐 100을 만드세요!</p>
                             </div>
                             <span class="play-badge">PLAY</span>
                         </div>
                     </a>
+<!-- Tile Dropper 게임 -->
+<a href="tile-dropper/index.html" class="game-card">
+    <div class="card-inner">
+        <div class="game-icon">💥</div>
+        <div class="game-info">
+            <h3>Tile Dropper</h3>
+            <p>빈칸을 클릭해 같은 색 타일을 터뜨리세요!</p>
+        </div>
+        <span class="play-badge">PLAY</span>
+    </div>
+</a>
 
                     <!-- 추가 예정 게임 -->
                     <div class="game-card disabled">
@@ -90,5 +95,7 @@
             </div>
         </footer>
     </div>
+<script src="script.js">
+</script>
 </body>
 </html>
