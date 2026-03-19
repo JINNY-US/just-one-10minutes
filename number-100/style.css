@@ -140,3 +140,144 @@ h1 { margin-top: 0; color: #2c3e50; }
 }
 
 .home-btn { background-color: #6c757d; }
+
+/* 토글 위치 */
+.dark-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 999;
+}
+
+/* 스위치 */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+}
+
+.switch input {
+  display: none;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  background: #ccc;
+  border-radius: 34px;
+  top: 0; left: 0; right: 0; bottom: 0;
+  transition: 0.3s;
+}
+
+.slider:before {
+  content: "";
+  position: absolute;
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.slider:after {
+  content: "🌙";
+  position: absolute;
+  right: 6px;
+  top: 3px;
+  font-size: 14px;
+}
+
+/* ON 상태 */
+input:checked + .slider {
+  background: #4caf50;
+}
+
+input:checked + .slider:before {
+  transform: translateX(24px);
+}
+
+/* 🌙 다크모드 스타일 */
+body.dark {
+  background: #121212;
+  color: #eee;
+}
+
+/* 게임 컨테이너 배경 */
+body.dark .game-container {
+  background: #1e1e1e;
+}
+
+/* 버튼 / 링크 색상 */
+body.dark button,
+body.dark .home-btn {
+  background: #333;
+  color: #eee;
+}
+
+/* 타이머 바 배경 */
+body.dark #timer-container {
+  background: #333;
+}
+
+/* 보드 컨테이너 배경 */
+body.dark #board-container {
+  background: #181818;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+/* 게임 보드 배경을 더 어둡게 */
+body.dark #game-board {
+  background: #141414;  /* 🔥 글자 대비 강화 */
+  border-radius: 10px;
+  padding: 10px;
+}
+
+/* h1 글자색 */
+body.dark h1 {
+  color: #ffffff; /* 🔥 다크모드에서 숫자 100 선명하게 */
+}
+
+/* 점수 글자 색 */
+body.dark #score {
+  color: #ffffff;
+}
+
+/* 빈칸 타일 */
+body.dark .empty.light {
+  background: #2a2a2a;
+}
+
+body.dark .empty.dark {
+  background: #1f1f1f;
+}
+
+/* 타일 그림자 */
+body.dark .tile:not(.empty) {
+  box-shadow: 0 1px 2px rgba(255,255,255,0.1);
+}
+/* 다크모드 타일 색상 */
+body.dark .tile {
+  background-color: #2c2c2c;  /* 🔥 기본 타일 어둡게 */
+  color: #eee;               /* 숫자 잘 보이게 */
+}
+
+/* 호버 효과 */
+body.dark .tile:hover {
+  background-color: #3a3a3a;
+}
+
+/* 선택된 타일 */
+body.dark .tile.selected {
+  background-color: #f1c40f;
+  color: #000;
+}
+
+/* 합쳐진 타일 */
+body.dark .tile.merged {
+  background-color: #2ecc71;
+  color: #000;
+}
