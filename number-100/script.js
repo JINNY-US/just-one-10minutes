@@ -8,7 +8,7 @@ const startBtn = document.getElementById('start-btn');
 let score = 0;
 let grid = [];
 let selectedTile = null;
-const LIMIT_TIME = 100; // 초기 시간 100초로 연장
+const LIMIT_TIME = 100; 
 let timeLeft = LIMIT_TIME;
 let timerInterval;
 let startTime = 0;
@@ -27,8 +27,10 @@ function initGame() {
 function getRandomNumber() {
     const elapsedTime = (Date.now() - startTime) / 1000;
     
-    // 초반 범위 1~50으로 시작, 이후 서서히 증가하여 최대 99까지
-    let maxRange = 50 + Math.min(elapsedTime * 1.0, 49); 
+    // 초반 1~20으로 시작, 60초에 걸쳐 최대 1~50까지 증가
+    let additionalRange = Math.min(elapsedTime * 0.5, 30); // 최대 30 추가
+    let maxRange = 20 + additionalRange; 
+    
     return Math.floor(Math.random() * maxRange) + 1;
 }
 
@@ -125,7 +127,7 @@ function updateTimerDisplay() {
     const widthPercent = (timeLeft / LIMIT_TIME) * 100;
     timerBar.style.width = `${widthPercent}%`;
     
-    if (timeLeft < 15) { // 위험 표시 기준도 15초로 소폭 조정
+    if (timeLeft < 15) {
         timerBar.style.backgroundColor = "#ff0000";
     } else {
         timerBar.style.backgroundColor = "#e74c3c";
