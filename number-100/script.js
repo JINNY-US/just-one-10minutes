@@ -4,18 +4,36 @@ const timerBar = document.getElementById('timer-bar');
 const resetBtn = document.getElementById('reset-button');
 const startOverlay = document.getElementById('start-overlay');
 const startBtn = document.getElementById('start-btn');
+const toggle = document.getElementById("darkModeToggle");
 
-// 효과음 객체
+// 저장된 상태 불러오기
+if (localStorage.getItem("darkMode") === "on") {
+  document.body.classList.add("dark");
+  toggle.checked = true;
+}
+
+// 토글 이벤트
+toggle.addEventListener("change", () => {
+  if (toggle.checked) {
+    document.body.classList.add("dark");
+    localStorage.setItem("darkMode", "on");
+  } else {
+    document.body.classList.remove("dark");
+    localStorage.setItem("darkMode", "off");
+  }
+});
+
+// 더욱 안정적인 오픈 소스 효과음 주소로 교체
 const sounds = {
-    start: new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'),
-    select: new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'),
-    merge: new Audio('https://assets.mixkit.co/active_storage/sfx/2567/2568-preview.mp3'),
-    success: new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'), // 확실히 재생되는 톡 터지는 소리
-    gameOver: new Audio('https://assets.mixkit.co/active_storage/sfx/133/133-preview.mp3')
+    start: new Audio('https://actions.google.com/sounds/v1/states-of-matter/pop_high.ogg'),
+    select: new Audio('https://actions.google.com/sounds/v1/foley/sliding_whistle_up.ogg'),
+    merge: new Audio('https://actions.google.com/sounds/v1/foley/button_click.ogg'),
+    success: new Audio('https://actions.google.com/sounds/v1/cartoon/clirrup_whoosh.ogg'), // 100 완성 시 경쾌한 소리
+    gameOver: new Audio('https://actions.google.com/sounds/v1/cartoon/conork_fail.ogg')
 };
 
 let score = 0;
-let grid = []; // 이제 숫자가 아닌 { value, moves } 객체를 담습니다.
+let grid = []; 
 let selectedTile = null;
 const LIMIT_TIME = 120; 
 let timeLeft = LIMIT_TIME;
@@ -42,7 +60,6 @@ function getRandomNumber() {
         let maxRange = 20 + additionalRange; 
         val = Math.floor(Math.random() * maxRange) + 1;
     }
-    // 객체 형태로 반환 (값과 해당 타일의 누적 이동 횟수)
     return { value: val, moves: 0 };
 }
 
@@ -83,8 +100,7 @@ function handleTileClick(r, c) {
 
     if (!selectedTile) {
         selectedTile = { r, c };
-        sounds.select.currentTime = 0;
-        sounds.select.play();
+        playSound(sounds.select);
         renderBoard();
     } else {
         const dr = Math.abs(selectedTile.r - r);
@@ -94,27 +110,20 @@ function handleTileClick(r, c) {
             const tile1 = grid[selectedTile.r][selectedTile.c];
             const tile2 = grid[r][c];
             const sum = tile1.value + tile2.value;
-            const totalMoves = tile1.moves + tile2.moves + 1; // 이동 횟수 합산
+            const totalMoves = tile1.moves + tile2.moves + 1;
 
             if (sum <= 100) {
-                // [변경] 합칠 때마다 즉시 점수 부여
                 score += sum;
 
                 if (sum === 100) {
-                    sounds.success.currentTime = 0;
-                    sounds.success.play();
-                    
-                    // [변경] 100 완성 보너스: 이동 횟수가 적을수록 큰 점수 (최대 200, 최소 50)
+                    playSound(sounds.success);
                     const bonus = Math.max(50, 250 - (totalMoves * 30));
                     score += bonus;
-                    
                     grid[selectedTile.r][selectedTile.c] = { value: 0, moves: 0 };
                     grid[r][c] = { value: 0, moves: 0 };
-                    
                     timeLeft = Math.min(timeLeft + 5, LIMIT_TIME);
                 } else {
-                    sounds.start.currentTime = 0;
-                    sounds.start.play();
+                    playSound(sounds.merge);
                     grid[r][c] = { value: sum, moves: totalMoves };
                     grid[selectedTile.r][selectedTile.c] = { value: 0, moves: 0 };
                 }
@@ -125,17 +134,21 @@ function handleTileClick(r, c) {
                 renderBoard();
             } else {
                 selectedTile = { r, c };
-                sounds.select.currentTime = 0;
-                sounds.select.play();
+                playSound(sounds.select);
                 renderBoard();
             }
         } else {
             selectedTile = { r, c };
-            sounds.select.currentTime = 0;
-            sounds.select.play();
+            playSound(sounds.select);
             renderBoard();
         }
     }
+}
+
+// 소리 재생 함수 (중복 재생 및 에러 방지)
+function playSound(audio) {
+    audio.currentTime = 0;
+    audio.play().catch(e => console.log("Sound play prevented:", e));
 }
 
 function applyGravity() {
@@ -173,7 +186,7 @@ function startTimer() {
         if (timeLeft <= 0) {
             clearInterval(timerInterval);
             timerInterval = null;
-            sounds.gameOver.play();
+            playSound(sounds.gameOver);
             alert(`게임 종료! 최종 점수: ${score}`);
             startOverlay.style.display = 'flex';
         }
@@ -181,10 +194,23 @@ function startTimer() {
 }
 
 startBtn.onclick = () => {
-    sounds.start.play();
-    startOverlay.style.display = 'none';
-    initGame();
-    startTimer();
+    // [중요] 모든 효과음의 '잠금 해제' (유저 클릭 시점에 load 호출)
+    Object.values(sounds).forEach(s => {
+        s.load();
+        s.muted = true; // 무음 재생으로 세션 활성화
+        s.play().then(() => {
+            s.pause();
+            s.muted = false;
+            s.currentTime = 0;
+        });
+    });
+
+    setTimeout(() => {
+        playSound(sounds.start);
+        startOverlay.style.display = 'none';
+        initGame();
+        startTimer();
+    }, 100);
 };
 
 resetBtn.onclick = () => {
