@@ -10,7 +10,7 @@ const sounds = {
     start: new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'),
     select: new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'),
     merge: new Audio('https://assets.mixkit.co/active_storage/sfx/2567/2568-preview.mp3'),
-    success: new Audio('https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3'),
+    success: new Audio('https://www.myinstants.com/media/sounds/pop.mp3'),
     gameOver: new Audio('https://assets.mixkit.co/active_storage/sfx/133/133-preview.mp3')
 };
 
