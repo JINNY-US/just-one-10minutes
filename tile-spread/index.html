@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>숫자 증식 퍼즐</title>
+<style>
+body { font-family: sans-serif; text-align:center; background:#f5f5f5; }
+h1 { margin:10px; }
+#info { margin:10px; }
+#grid {
+  display:grid;
+  grid-template-columns: repeat(7, 50px);
+  gap:6px;
+  justify-content:center;
+  margin-top:20px;
+}
+.tile {
+  width:50px;height:50px;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:bold;font-size:18px;
+  border-radius:10px;cursor:pointer;
+  transition:0.2s;
+}
+.tile.empty { background:#ddd; cursor:pointer; }
+.tile.n1{background:#e0f7fa;} .tile.n2{background:#b2ebf2;}
+.tile.n3{background:#80deea;} .tile.n4{background:#4dd0e1;}
+.tile.n5{background:#26c6da;} .tile.n6{background:#00bcd4;}
+.tile.n7{background:#00acc1; color:white;}
+.tile.n8{background:#0097a7; color:white;}
+.tile.n9{background:#006064; color:white;}
+</style>
+</head>
+<body>
+<h1>🧪 숫자 증식 퍼즐</h1>
+<div id="info">
+점수: <b id="score">0</b>
+</div>
+<div id="grid"></div>
+<script>
+const SIZE = 7;
+let grid = [];
+let score = 0;
+
+const gridEl = document.getElementById('grid');
+const scoreEl = document.getElementById('score');
+
+function rand(){ return Math.floor(Math.random()*3)+1; }
+
+function init(){
+  grid=[];
+  for(let y=0;y<SIZE;y++){
+    let row=[];
+    for(let x=0;x<SIZE;x++) row.push(rand());
+    grid.push(row);
+  }
+  render();
+}
+
+function render(){
+  gridEl.innerHTML='';
+  for(let y=0;y<SIZE;y++){
+    for(let x=0;x<SIZE;x++){
+      const v = grid[y][x];
+      const d=document.createElement('div');
+      d.className='tile '+(v?('n'+v):'empty');
+      d.textContent = v||'';
+      d.onclick=()=>play(x,y);
+      gridEl.appendChild(d);
+    }
+  }
+}
+
+function play(x,y){
+  const v = grid[y][x];
+  if(!v) return;
+
+  const dirs=[[0,0],[1,0],[-1,0],[0,1],[0,-1]];
+  dirs.forEach(([dx,dy])=>{
+    const nx=x+dx, ny=y+dy;
+    if(nx<0||ny<0||nx>=SIZE||ny>=SIZE) return;
+    if(!grid[ny][nx]) grid[ny][nx]=v;
+    else if(grid[ny][nx]===v){
+      grid[ny][nx]++;
+      score+=grid[ny][nx];
+    }
+  });
+
+  grid[y][x]=0;
+  chain();
+  render();
+}
+
+function chain(){
+  let changed=true;
+  let combo=1;
+  while(changed){
+    changed=false;
+    for(let y=0;y<SIZE;y++){
+      for(let x=0;x<SIZE;x++){
+        let v=grid[y][x];
+        if(!v) continue;
+        const dirs=[[1,0],[0,1]];
+        for(const [dx,dy] of dirs){
+          const nx=x+dx, ny=y+dy;
+          if(nx>=SIZE||ny>=SIZE) continue;
+          if(grid[ny][nx]===v){
+            grid[ny][nx]++;
+            grid[y][x]=0;
+            score+=grid[ny][nx]*combo;
+            combo++;
+            changed=true;
+          }
+        }
+      }
+    }
+  }
+}
+
+init();
+</script>
+</body>
+</html>

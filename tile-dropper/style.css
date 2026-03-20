@@ -1,33 +1,57 @@
 /* Tile Dropper 전용 스타일 */
+:root {
+    --tile-size: 28px;
+    --tile-gap: 3px;
+}
+
+/* 모바일 대응 (화면이 작을 때) */
+@media (max-width: 768px) {
+    :root {
+        --tile-size: 14px; /* 타일 크기를 절반으로 줄임 */
+        --tile-gap: 1.5px;
+    }
+}
+
+/* 아주 작은 화면 대응 */
+@media (max-width: 400px) {
+    :root {
+        --tile-size: 12px;
+        --tile-gap: 1px;
+    }
+}
 
 #game {
     display: grid;
-    grid-template-columns: repeat(23, 28px);
-    gap: 3px;
+    grid-template-columns: repeat(23, var(--tile-size));
+    gap: var(--tile-gap);
     justify-content: center;
-    margin: 20px auto; /* 상하 여백 증가 */
+    margin: 10px auto;
+    touch-action: none; /* 터치 시 화면 스크롤 방지 */
+    user-select: none;
+    max-width: 95vw; /* 화면 너비의 95%를 넘지 않도록 제한 */
+    overflow: hidden;
 }
 
 /* 컨테이너 간격 조정 */
 #timer-container {
-    margin-bottom: 30px !important;
+    margin-bottom: 20px !important;
 }
 
 #board-container {
-    margin: 20px auto 40px !important; /* 아래쪽 스코어와의 간격 확보 */
+    margin: 10px auto 30px !important;
 }
 
 /* 기본 타일 */
 .tile {
-    width: 28px;
-    height: 28px;
+    width: var(--tile-size);
+    height: var(--tile-size);
     cursor: pointer;
     transition: transform 0.15s, opacity 0.2s;
 }
 
 /* 🎨 색 타일 */
 .tile:not(.empty) {
-    border-radius: 6px;
+    border-radius: 4px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
@@ -42,7 +66,7 @@
 .empty.dark { background: #e0e0e0; }
 
 .empty:hover {
-    outline: 2px solid #aaa;
+    outline: 1px solid #aaa;
     opacity: 0.7;
 }
 
