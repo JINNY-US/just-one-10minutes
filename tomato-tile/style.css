@@ -8,6 +8,8 @@
     --btn-hover: #e53935;
     --border-color: #ffdcdc;
     --timer-bg: #ffebee;
+    --tile-size: 34px;
+    --tile-gap: 4px;
 }
 
 /* 🌙 다크모드 스타일 */
@@ -20,67 +22,25 @@ body.dark {
     --timer-bg: #333;
 }
 
-/* 토글 위치 */
-.dark-toggle {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 999;
+/* 모바일 대응 */
+@media (max-width: 768px) {
+    :root {
+        --tile-size: 24px;
+        --tile-gap: 3px;
+    }
 }
 
-/* 스위치 */
-.switch {
-    position: relative;
-    display: inline-block;
-    width: 50px;
-    height: 26px;
+@media (max-width: 480px) {
+    :root {
+        --tile-size: 18px;
+        --tile-gap: 2px;
+    }
 }
 
-.switch input {
-    display: none;
-}
-
-.slider {
-    position: absolute;
-    cursor: pointer;
-    background: #ccc;
-    border-radius: 34px;
-    top: 0; left: 0; right: 0; bottom: 0;
-    transition: 0.3s;
-}
-
-.slider:after {
-    content: "🌙";
-    position: absolute;
-    right: 6px;
-    top: 3px;
-    font-size: 14px;
-}
-
-.slider:before {
-    content: "";
-    position: absolute;
-    height: 20px;
-    width: 20px;
-    left: 3px;
-    bottom: 3px;
-    background: white;
-    border-radius: 50%;
-    transition: 0.3s;
-}
-
-/* ON 상태 */
-input:checked + .slider {
-    background: #4caf50;
-}
-
-input:checked + .slider:before {
-    transform: translateX(24px);
-}
-
+/* 바디 스타일 */
 body {
     margin: 0;
-    padding: 20px;
+    padding: 10px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -89,29 +49,32 @@ body {
     color: var(--text-color);
     font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
     user-select: none;
-    overflow: hidden;
+    overflow-x: hidden;
     transition: background-color 0.3s, color 0.3s;
 }
 
 h1 {
     color: var(--tomato-color);
     margin: 0 0 10px 0;
-    font-size: 2.5rem;
+    font-size: clamp(1.5rem, 5vw, 2.5rem);
     font-weight: 900;
 }
 
 .game-container {
     text-align: center;
     position: relative;
+    width: 100%;
     max-width: 800px;
 }
 
+/* 상단 타이머 바 */
 .timer-wrapper {
-    width: 100%;
-    height: 15px;
+    width: 90%;
+    max-width: 600px;
+    height: 12px;
     background-color: var(--timer-bg);
     border-radius: 10px;
-    margin-bottom: 20px;
+    margin: 0 auto 15px;
     overflow: hidden;
     border: 2px solid var(--border-color);
 }
@@ -123,17 +86,68 @@ h1 {
     transition: width 0.1s linear;
 }
 
+/* 게임 보드 */
 .board-wrapper {
     position: relative;
-    padding: 10px;
+    padding: 8px;
     background-color: var(--card-bg);
-    border: 6px solid var(--border-color);
-    border-radius: 15px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    border: 4px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
     cursor: crosshair;
+    display: inline-block;
+    max-width: 98vw;
+    touch-action: none; /* 드래그 시 스크롤 방지 */
 }
 
-/* 시작 오버레이: 보드 중앙에 위치 */
+.game-board {
+    display: grid;
+    grid-template-columns: repeat(17, var(--tile-size));
+    grid-template-rows: repeat(11, var(--tile-size));
+    gap: var(--tile-gap);
+}
+
+.tile {
+    width: var(--tile-size);
+    height: var(--tile-size);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--tomato-color);
+    color: white;
+    border-radius: 50%;
+    font-size: calc(var(--tile-size) * 0.55);
+    font-weight: 800;
+    position: relative;
+    box-shadow: inset -2px -2px 0px rgba(0,0,0,0.1);
+}
+
+/* 노란 토마토 스타일 */
+.tile.yellow {
+    background-color: #ffeb3b;
+    color: #333;
+    box-shadow: inset -2px -2px 0px rgba(0,0,0,0.1), 0 0 8px rgba(255, 235, 59, 0.4);
+}
+
+.tile::before {
+    content: '';
+    position: absolute;
+    top: 10%;
+    width: 20%;
+    height: 20%;
+    background-color: #4caf50;
+    border-radius: 2px;
+}
+
+.tile.empty {
+    background-color: var(--empty-color);
+    color: transparent;
+    box-shadow: none;
+    opacity: 0.3;
+}
+.tile.empty::before { display: none; }
+
+/* 시작 오버레이 */
 .start-overlay {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -143,54 +157,15 @@ h1 {
     background-color: rgba(0,0,0,0.4);
     backdrop-filter: blur(2px);
     z-index: 50;
-    border-radius: 10px;
-    transition: opacity 0.3s;
+    border-radius: 8px;
 }
 
-.start-overlay.hidden {
-    opacity: 0;
-    pointer-events: none;
-}
-
-.game-board {
-    display: grid;
-    grid-template-columns: repeat(17, 34px);
-    grid-template-rows: repeat(11, 34px);
-    gap: 4px;
-}
-
-.tile {
-    width: 34px; height: 34px;
-    display: flex; justify-content: center; align-items: center;
-    background-color: var(--tomato-color);
-    color: white; border-radius: 50%;
-    font-size: 18px; font-weight: 800;
-    position: relative;
-    box-shadow: inset -3px -3px 0px rgba(0,0,0,0.1);
-}
-
-/* 노란 토마토 스타일 */
-.tile.yellow {
-    background-color: #ffeb3b;
-    color: #333;
-    box-shadow: inset -3px -3px 0px rgba(0,0,0,0.1), 0 0 10px rgba(255, 235, 59, 0.5);
-}
-
-.tile::before {
-    content: ''; position: absolute; top: 2px; width: 6px; height: 6px;
-    background-color: #4caf50; border-radius: 2px;
-}
-
-.tile.empty {
-    background-color: var(--empty-color); color: transparent;
-    box-shadow: none; opacity: 0.3;
-}
-.tile.empty::before { display: none; }
+.start-overlay.hidden { display: none; }
 
 /* 버튼 스타일 */
 .btn {
-    padding: 10px 20px;
-    font-size: 1.1rem;
+    padding: 8px 16px;
+    font-size: 1rem;
     font-weight: 700;
     background-color: var(--btn-color);
     color: white;
@@ -202,67 +177,80 @@ h1 {
     transition: transform 0.1s, background-color 0.2s;
 }
 
-.btn:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0px rgba(0,0,0,0.1);
-}
-
 .btn-start {
-    font-size: 1.5rem;
-    padding: 15px 40px;
+    font-size: 1.3rem;
+    padding: 12px 30px;
     background-color: #4caf50;
     box-shadow: 0 6px 0px #388e3c;
 }
-.btn-start:hover { background-color: #43a047; }
 
 .footer {
-    margin-top: 20px;
+    margin-top: 15px;
     background: var(--card-bg);
-    padding: 15px;
+    padding: 10px;
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
 
 .score-board {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     font-weight: 700;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
-.score-board span { color: var(--tomato-color); font-size: 2rem; }
+.score-board span { color: var(--tomato-color); font-size: 1.5rem; }
 
-.bottom-menu { display: flex; justify-content: center; gap: 10px; }
+.bottom-menu { display: flex; justify-content: center; gap: 8px; }
 .btn-back { background-color: #555; }
 
+/* 드래그 선택 박스 */
 .selection-box {
     position: absolute;
-    border: 3px solid #ffcc00;
+    border: 2px solid #ffcc00;
     background-color: rgba(255, 204, 0, 0.2);
     pointer-events: none;
     z-index: 100;
 }
 
-.overlay {
+/* 토글 위치 */
+.dark-toggle {
     position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85);
-    backdrop-filter: blur(5px);
-    display: flex; justify-content: center; align-items: center;
-    z-index: 1000;
+    top: 15px;
+    right: 15px;
+    z-index: 999;
 }
 
-.hidden { display: none !important; }
-
-.result-modal {
-    background: var(--card-bg); color: var(--text-color);
-    padding: 40px; border-radius: 20px; text-align: center;
-    box-shadow: 0 15px 40px rgba(0,0,0,0.5);
-    border-top: 10px solid var(--tomato-color);
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
 }
-.result-modal h2 { font-size: 3rem; margin-top: 0; }
-.final-score-text { font-size: 2rem; margin: 20px 0; }
-.final-score-text span { color: var(--tomato-color); font-weight: 800; font-size: 2.5rem; }
-
-@media (max-width: 700px) {
-    .game-board { grid-template-columns: repeat(17, 20px); grid-template-rows: repeat(11, 20px); gap: 2px; }
-    .tile { width: 20px; height: 20px; font-size: 12px; }
+.switch input { display: none; }
+.slider {
+    position: absolute;
+    cursor: pointer;
+    background: #ccc;
+    border-radius: 24px;
+    top: 0; left: 0; right: 0; bottom: 0;
+    transition: 0.3s;
 }
+.slider:after {
+    content: "🌙";
+    position: absolute;
+    right: 5px;
+    top: 3px;
+    font-size: 12px;
+}
+.slider:before {
+    content: "";
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+input:checked + .slider { background: #4caf50; }
+input:checked + .slider:before { transform: translateX(20px); }
