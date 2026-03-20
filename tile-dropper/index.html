@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Color Tiles - 다른 색 찾기</title>
+    <title>Tile Dropper - 타일 터뜨리기</title>
     <!-- 공통 스타일 -->
     <link rel="stylesheet" href="../common-game.css">
     <!-- 게임 전용 스타일 -->
@@ -17,28 +17,25 @@
         </label>
     </div>
 
-    <div class="game-container">
-        <h1>COLOR TILES</h1>
+    <div class="game-container" style="max-width: 800px; width: 95%;">
+        <h1>TILE DROPPER</h1>
         <div id="timer-container">
             <div id="timer-bar"></div>
         </div>
-        
+
         <div id="board-container">
-            <div id="game-board" class="grid-2"></div>
-            <!-- 시작 버튼 오버레이 -->
+            <div id="game"></div>
             <div id="start-overlay">
                 <button id="start-btn" class="btn btn-accent">시작하기</button>
             </div>
         </div>
-        
+
         <div id="score">Score: 0</div>
-        
         <div class="controls">
             <button id="reset-btn" class="btn btn-primary">다시하기</button>
             <a href="../index.html" class="home-btn">돌아가기</a>
         </div>
     </div>
-
     <!-- 공통 로직 -->
     <script src="../common-game.js"></script>
     <!-- 게임 전용 로직 -->

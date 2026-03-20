@@ -11,7 +11,6 @@ const LIMIT_TIME = 15;
 let timeLeft = LIMIT_TIME;
 let timerInterval;
 let lastTargetIndex = -1; // 이전 정답 위치 기억
-
 function getRandomColor() {
     // 0~255 전체 범위를 사용하여 훨씬 다양한 색상 생성
     // 정답 타일이 너무 밝아져서 안 보이는 것을 방지하기 위해 base는 최대 230으로 제한

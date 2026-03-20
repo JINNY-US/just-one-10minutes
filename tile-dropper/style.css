@@ -1,0 +1,59 @@
+/* Tile Dropper 전용 스타일 */
+
+#game {
+    display: grid;
+    grid-template-columns: repeat(23, 28px);
+    gap: 3px;
+    justify-content: center;
+    margin: 20px auto; /* 상하 여백 증가 */
+}
+
+/* 컨테이너 간격 조정 */
+#timer-container {
+    margin-bottom: 30px !important;
+}
+
+#board-container {
+    margin: 20px auto 40px !important; /* 아래쪽 스코어와의 간격 확보 */
+}
+
+/* 기본 타일 */
+.tile {
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    transition: transform 0.15s, opacity 0.2s;
+}
+
+/* 🎨 색 타일 */
+.tile:not(.empty) {
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* ⬜ 배경 타일 */
+.empty {
+    border-radius: 0;
+    opacity: 0.15;
+    filter: grayscale(20%);
+}
+
+.empty.light { background: #ffffff; }
+.empty.dark { background: #e0e0e0; }
+
+.empty:hover {
+    outline: 2px solid #aaa;
+    opacity: 0.7;
+}
+
+.empty:active { transform: scale(0.95); }
+
+/* 제거 애니메이션 */
+.removing {
+    transform: scale(0);
+    opacity: 0;
+}
+
+/* 다크모드 대응 */
+body.dark .empty.light { background: #2a2a2a; }
+body.dark .empty.dark { background: #1f1f1f; }

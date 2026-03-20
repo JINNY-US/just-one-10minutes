@@ -1,88 +1,17 @@
-body {
-    font-family: 'Arial', sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    background-color: #f0f0f0;
-    margin: 0;
-}
-
-.game-container {
-    text-align: center;
-    background-color: white;
-    padding: 30px;
-    border-radius: 15px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    width: 380px;
-}
-
-h1 { margin-top: 0; color: #2c3e50; }
-
-#timer-container {
-    width: 100%;
-    height: 15px;
-    background-color: #e0e0e0;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    overflow: hidden;
-}
-
-#timer-bar {
-    width: 100%;
-    height: 100%;
-    background-color: #e74c3c;
-    transition: width 0.1s linear;
-}
-
-#board-container {
-    position: relative;
-    width: fit-content;
-    margin: 0 auto 20px;
-}
+/* Number 100 전용 스타일 */
 
 #game-board {
     display: grid;
-    grid-template-columns: repeat(4, 80px);
-    grid-template-rows: repeat(4, 80px);
+    grid-template-columns: repeat(4, 75px);
+    grid-template-rows: repeat(4, 75px);
     gap: 10px;
     padding: 10px;
-    background-color: #34495e;
-    border-radius: 10px;
+    background-color: transparent;
 }
-
-#start-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 10;
-    border-radius: 10px;
-}
-
-#start-btn {
-    padding: 15px 30px;
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: white;
-    background-color: #2ecc71;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: transform 0.2s;
-}
-
-#start-btn:hover { transform: scale(1.1); }
 
 .tile {
-    width: 80px;
-    height: 80px;
+    width: 75px;
+    height: 75px;
     background-color: #ecf0f1;
     display: flex;
     align-items: center;
@@ -90,9 +19,10 @@ h1 { margin-top: 0; color: #2c3e50; }
     font-size: 1.5rem;
     font-weight: bold;
     cursor: pointer;
-    border-radius: 8px;
+    border-radius: 10px;
     transition: transform 0.2s, background-color 0.2s, color 0.2s;
     user-select: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
 .tile:hover { background-color: #bdc3c7; }
@@ -104,7 +34,7 @@ h1 { margin-top: 0; color: #2c3e50; }
 }
 
 .tile.merged {
-    background-color: #2ecc71;
+    background-color: var(--accent-color);
     color: white;
     animation: pulse 0.3s;
 }
@@ -115,28 +45,15 @@ h1 { margin-top: 0; color: #2c3e50; }
     100% { transform: scale(1); }
 }
 
-#score {
-    font-size: 1.5em;
-    margin-bottom: 20px;
-    font-weight: bold;
-    color: #2c3e50;
+/* 다크모드 타일 스타일 */
+body.dark .tile {
+    background-color: #2c3e50;
+    color: #ecf0f1;
 }
 
-.controls {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-}
+body.dark .tile:hover { background-color: #34495e; }
 
-#reset-button, .home-btn {
-    padding: 10px 20px;
-    font-size: 1em;
-    cursor: pointer;
-    background-color: #3498db;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    text-decoration: none;
+body.dark .tile.selected {
+    background-color: #f1c40f;
+    color: #000;
 }
-
-.home-btn { background-color: #6c757d; }

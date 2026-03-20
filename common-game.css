@@ -1,0 +1,244 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+
+/* 공통 디자인 시스템 변수 */
+:root {
+    --primary-color: #3498db;
+    --primary-hover: #2980b9;
+    --accent-color: #2ecc71;
+    --accent-hover: #27ae60;
+    --danger-color: #e74c3c;
+    --dark-bg: #121212;
+    --light-bg: #f8f9fa;
+    --card-bg-light: #ffffff;
+    --card-bg-dark: #1e1e1e;
+    --text-light: #2c3e50;
+    --text-dark: #eeeeee;
+    --btn-gray: #6c757d;
+    --btn-gray-hover: #5a6268;
+    --board-bg-light: #ecf0f1;
+    --board-bg-dark: #181818;
+}
+
+/* 기본 레이아웃 */
+body {
+    font-family: 'Noto Sans KR', 'Arial', sans-serif;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: var(--light-bg);
+    color: var(--text-light);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+body.dark {
+    background-color: var(--dark-bg);
+    color: var(--text-dark);
+}
+
+/* 컨테이너 스타일 */
+.game-container {
+    text-align: center;
+    background-color: var(--card-bg-light);
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    width: 90%;
+    max-width: 400px;
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+body.dark .game-container {
+    background-color: var(--card-bg-dark);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+/* 타이머 스타일 */
+#timer-container {
+    width: 100%;
+    height: 15px;
+    background-color: #e0e0e0;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+body.dark #timer-container {
+    background-color: #333;
+}
+
+#timer-bar {
+    width: 100%;
+    height: 100%;
+    background-color: var(--danger-color);
+    transition: width 0.1s linear;
+}
+
+/* 버튼 공통 스타일 */
+.btn, button, .home-btn {
+    padding: 10px 20px;
+    font-size: 1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: transform 0.2s, background-color 0.2s, color 0.2s;
+    font-family: inherit;
+}
+
+.btn:active, button:active, .home-btn:active {
+    transform: scale(0.95);
+}
+
+.btn-primary, #reset-btn, #reset-button {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover, #reset-btn:hover, #reset-button:hover {
+    background-color: var(--primary-hover);
+}
+
+.btn-accent, #start-btn {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.btn-accent:hover, #start-btn:hover {
+    background-color: var(--accent-hover);
+}
+
+.btn-gray, .home-btn {
+    background-color: var(--btn-gray);
+    color: white;
+}
+
+.btn-gray:hover, .home-btn:hover {
+    background-color: var(--btn-gray-hover);
+}
+
+#start-btn {
+    padding: 15px 30px;
+    font-size: 1.5rem;
+}
+
+/* 다크모드에서의 버튼 스타일 조정 */
+body.dark button, 
+body.dark .btn,
+body.dark .home-btn {
+    background-color: #333;
+    color: #eee;
+}
+
+body.dark #start-btn {
+    background-color: var(--accent-hover);
+    color: white;
+}
+
+body.dark #reset-btn, 
+body.dark #reset-button {
+    background-color: var(--primary-hover);
+    color: white;
+}
+
+/* 점수 스타일 */
+#score {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+/* 다크모드 토글 스위치 */
+.dark-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 999;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+}
+
+.switch input {
+    display: none;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    background: #ccc;
+    border-radius: 34px;
+    top: 0; left: 0; right: 0; bottom: 0;
+    transition: 0.3s;
+}
+
+.slider:before {
+    content: "";
+    position: absolute;
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+
+.slider:after {
+    content: "🌙";
+    position: absolute;
+    right: 6px;
+    top: 3px;
+    font-size: 14px;
+}
+
+input:checked + .slider {
+    background: #4caf50;
+}
+
+input:checked + .slider:before {
+    transform: translateX(24px);
+}
+
+/* 보드 컨테이너 공통 */
+#board-container {
+    position: relative;
+    width: fit-content;
+    margin: 0 auto 20px;
+    background-color: var(--board-bg-light);
+    padding: 10px;
+    border-radius: 12px;
+    transition: background-color 0.3s;
+}
+
+body.dark #board-container {
+    background-color: var(--board-bg-dark);
+}
+
+/* 오버레이 공통 */
+#start-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    border-radius: 10px;
+    transition: background-color 0.3s;
+}
+
+body.dark #start-overlay {
+    background-color: rgba(0, 0, 0, 0.8);
+}
