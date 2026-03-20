@@ -1,236 +1,59 @@
-body {
-  background: #f7f7f7;
-  color: #333;
-  text-align: center;
-  font-family: Arial;
-}
-
-h1 {
-  color: #444;
-}
-
-/* 타이머 */
-#timer-container {
-  width: 80%;
-  height: 20px;
-  background: #ddd;
-  margin: 10px auto;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-#timer-bar {
-  height: 100%;
-  width: 100%;
-  background: #4caf50;
-  transition: width 1s linear;
-}
-
-/* 보드 */
-#board-container {
-  position: relative;
-  display: inline-block;
-}
+/* Tile Dropper 전용 스타일 */
 
 #game {
-  display: grid;
-  grid-template-columns: repeat(23, 28px);
-  gap: 3px;
-  justify-content: center;
-  margin: 20px auto;
+    display: grid;
+    grid-template-columns: repeat(23, 28px);
+    gap: 3px;
+    justify-content: center;
+    margin: 20px auto; /* 상하 여백 증가 */
+}
+
+/* 컨테이너 간격 조정 */
+#timer-container {
+    margin-bottom: 30px !important;
+}
+
+#board-container {
+    margin: 20px auto 40px !important; /* 아래쪽 스코어와의 간격 확보 */
 }
 
 /* 기본 타일 */
 .tile {
-  width: 28px;
-  height: 28px;
-  cursor: pointer;
-  transition: transform 0.15s, opacity 0.2s;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    transition: transform 0.15s, opacity 0.2s;
 }
 
 /* 🎨 색 타일 */
 .tile:not(.empty) {
-  border-radius: 6px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
-/* ⬜ 배경 타일 (핵심🔥) */
+/* ⬜ 배경 타일 */
 .empty {
-  border-radius: 0;
-  opacity: 0.15;
-  filter: grayscale(20%);
+    border-radius: 0;
+    opacity: 0.15;
+    filter: grayscale(20%);
 }
 
-/* 체크무늬 */
-.empty.light {
-  background: #ffffff;
-}
-
-.empty.dark {
-  background: #e0e0e0;
-}
+.empty.light { background: #ffffff; }
+.empty.dark { background: #e0e0e0; }
 
 .empty:hover {
-  outline: 2px solid #aaa;
-  opacity: 0.7;
+    outline: 2px solid #aaa;
+    opacity: 0.7;
 }
 
-.empty:active {
-  transform: scale(0.95);
-}
+.empty:active { transform: scale(0.95); }
 
 /* 제거 애니메이션 */
 .removing {
-  transform: scale(0);
-  opacity: 0;
+    transform: scale(0);
+    opacity: 0;
 }
 
-/* 시작 오버레이 */
-#start-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(255,255,255,0.65);
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 10;
-}
-
-#start-btn {
-  padding: 20px 40px;
-  font-size: 22px;
-  font-weight: bold;
-  background: #4caf50;
-  color: white;
-  border-radius: 10px;
-  border: none;
-  cursor: pointer;
-}
-
-#start-btn:hover {
-  background: #45a049;
-}
-
-/* 버튼 */
-.controls {
-  margin-top: 10px;
-}
-
-button, .home-btn {
-  background: #ddd;
-  border: none;
-  color: #333;
-  padding: 10px 15px;
-  margin: 5px;
-  cursor: pointer;
-  text-decoration: none;
-}
-
-button:hover, .home-btn:hover {
-  background: #ccc;
-}
-/*.game-guide {
-  background: #ffffff;
-  border-radius: 10px;
-  padding: 10px;
-  width: 80%;
-  margin: 10px auto;
-  font-size: 14px;
-  line-height: 1.5;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}*/
-
-/* 토글 위치 */
-.dark-toggle {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 999;
-}
-
-/* 스위치 */
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 50px;
-  height: 26px;
-}
-
-.switch input {
-  display: none;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  background: #ccc;
-  border-radius: 34px;
-  top: 0; left: 0; right: 0; bottom: 0;
-  transition: 0.3s;
-}
-.slider:after {
-  content: "🌙";
-  position: absolute;
-  right: 6px;
-  top: 3px;
-  font-size: 14px;
-}
-.slider:before {
-  content: "";
-  position: absolute;
-  height: 20px;
-  width: 20px;
-  left: 3px;
-  bottom: 3px;
-  background: white;
-  border-radius: 50%;
-  transition: 0.3s;
-}
-
-/* ON 상태 */
-input:checked + .slider {
-  background: #4caf50;
-}
-
-input:checked + .slider:before {
-  transform: translateX(24px);
-}
-
-/* 🌙 다크모드 스타일 */
-body.dark {
-  background: #121212;
-  color: #eee;
-}
-
-body.dark .game-card {
-  background: #1e1e1e;
-}
-
-body.dark button,
-body.dark .home-btn {
-  background: #333;
-  color: #eee;
-}
-
-body.dark #timer-container {
-  background: #333;
-}
-
-body.dark .empty.light {
-  background: #2a2a2a;
-}
-
-body.dark .empty.dark {
-  background: #1f1f1f;
-}
-.slider:after {
-  content: "🌙";
-  position: absolute;
-  right: 6px;
-  top: 3px;
-  font-size: 14px;
-}
+/* 다크모드 대응 */
+body.dark .empty.light { background: #2a2a2a; }
+body.dark .empty.dark { background: #1f1f1f; }

@@ -1,53 +1,55 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>Tile Dropper</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tile Dropper - 타일 터뜨리기</title>
+    <!-- 공통 스타일 -->
+    <link rel="stylesheet" href="../common-game.css">
+    <!-- 게임 전용 스타일 -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="dark-toggle">
-  <label class="switch">
-    <input type="checkbox" id="darkModeToggle">
-    <span class="slider"></span>
-  </label>
-</div>
-
-<div class="game-container">
-  <h1>TILE DROPPER</h1>
-
-  <!-- 타이머 -->
-  <div id="timer-container">
-    <div id="timer-bar"></div>
-  </div>
-
-  <!-- 보드 -->
-  <div id="board-container">
-    <div id="game"></div>
-
-    <!-- 시작 오버레이 -->
-    <div id="start-overlay">
-      <button id="start-btn">시작하기</button>
+    <div class="dark-toggle">
+        <label class="switch">
+            <input type="checkbox" id="darkModeToggle">
+            <span class="slider"></span>
+        </label>
     </div>
-  </div>
 
-  <div id="score">점수: 0</div>
+    <div class="game-container" style="max-width: 800px; width: 95%;">
+        <h1>TILE DROPPER</h1>
+        <div id="timer-container">
+            <div id="timer-bar"></div>
+        </div>
 
-  <div class="controls">
-    <button id="reset-btn">다시하기</button>
-    <a href="../index.html" class="home-btn">돌아가기</a>
-  </div>
-</div><br><br>
-<div class="game-guide">
-  <p>타일이 없는 빈칸을 클릭해요</p>
-  <p>클릭한 위치에서 상하좌우로 가장 가까운 타일 안에</p>
-  <p>같은 색 타일이 있으면 점수를 얻어요</p>
-  <p>제한 시간 120초 안에 최대 점수 도전해봐요!</p>
-</div>
+        <div id="board-container">
+            <div id="game"></div>
+            <div id="start-overlay">
+                <button id="start-btn" class="btn btn-accent">시작하기</button>
+            </div>
+        </div>
 
-<audio id="popSound" src="https://cdn.jsdelivr.net/gh/jshawl/AudioFX/sounds/pop.mp3"></audio>
-<audio id="failSound" src="https://cdn.jsdelivr.net/gh/jshawl/AudioFX/sounds/error.mp3"></audio>
+        <div id="score">Score: 0</div>
+        <div class="controls">
+            <button id="reset-btn" class="btn btn-primary">다시하기</button>
+            <a href="../index.html" class="home-btn">돌아가기</a>
+        </div>
+        
+        <div class="game-guide" style="margin-top: 20px; font-size: 0.9rem; color: #7f8c8d; line-height: 1.6;">
+            <p>타일이 없는 빈칸을 클릭해요</p>
+            <p>클릭한 위치에서 상하좌우로 가장 가까운 타일 안에</p>
+            <p>같은 색 타일이 있으면 점수를 얻어요</p>
+            <p>제한 시간 120초 안에 최대 점수 도전해봐요!</p>
+        </div>
+    </div>
 
-<script src="script.js"></script>
+    <audio id="popSound" src="https://cdn.jsdelivr.net/gh/jshawl/AudioFX/sounds/pop.mp3"></audio>
+    <audio id="failSound" src="https://cdn.jsdelivr.net/gh/jshawl/AudioFX/sounds/error.mp3"></audio>
+
+    <!-- 공통 로직 -->
+    <script src="../common-game.js"></script>
+    <!-- 게임 전용 로직 -->
+    <script src="script.js"></script>
 </body>
 </html>

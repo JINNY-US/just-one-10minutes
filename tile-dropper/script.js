@@ -36,30 +36,10 @@ const overlay = document.getElementById("start-overlay");
 
 const popSound = document.getElementById("popSound");
 const failSound = document.getElementById("failSound");
-const toggle = document.getElementById("darkModeToggle");
+// 게임 설정
+const ROWS = 13;
+const COLS = 23;
 
-// 저장된 상태 불러오기
-if (localStorage.getItem("darkMode") === "on") {
-  document.body.classList.add("dark");
-  toggle.checked = true;
-}
-
-// 토글 이벤트
-toggle.addEventListener("change", () => {
-  if (toggle.checked) {
-    document.body.classList.add("dark");
-    localStorage.setItem("darkMode", "on");
-  } else {
-    document.body.classList.remove("dark");
-    localStorage.setItem("darkMode", "off");
-  }
-});
-
-// 초기 화면
-generateGrid();
-render();
-
-// 시작
 startBtn.onclick = () => {
   overlay.style.display = "none";
   startGame();
@@ -238,3 +218,8 @@ function updateUI() {
     timerBar.style.background = "#4caf50";
   }
 }
+
+// 초기화: 게임 시작 전에도 보드 레이아웃을 잡기 위해 실행
+generateGrid();
+render();
+updateUI();

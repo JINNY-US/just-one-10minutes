@@ -1,251 +1,36 @@
-body {
-    font-family: Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    background-color: #f0f0f0;
-    margin: 0;
-}
-
-.game-container {
-    text-align: center;
-    background-color: white;
-    padding: 30px;
-    border-radius: 15px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    width: 380px;
-}
-
-/* 타이머 스타일 */
-#timer-container {
-    width: 100%;
-    height: 15px;
-    background-color: #e0e0e0;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    overflow: hidden;
-}
-
-#timer-bar {
-    width: 100%;
-    height: 100%;
-    background-color: #e74c3c;
-    transition: width 0.1s linear;
-}
-
-/* 보드 컨테이너 및 오버레이 */
-#board-container {
-    position: relative;
-    width: fit-content;
-    margin: 0 auto 20px;
-}
+/* Tile Memory 전용 스타일 */
 
 #game-board {
     display: grid;
-    grid-template-columns: repeat(4, 80px);
-    grid-template-rows: repeat(4, 80px);
+    grid-template-columns: repeat(4, 70px);
+    grid-template-rows: repeat(4, 70px);
     gap: 10px;
-    border: 2px solid #333;
     padding: 10px;
-    background-color: #fff;
-    border-radius: 10px;
-}
-
-#start-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(255, 255, 255, 0.8);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 10;
-    border-radius: 5px;
-}
-
-#start-btn {
-    padding: 15px 30px;
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: white;
-    background-color: #2ecc71;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: transform 0.2s, background-color 0.2s;
-}
-
-#start-btn:hover {
-    background-color: #27ae60;
-    transform: scale(1.1);
+    background-color: transparent;
 }
 
 .tile {
-    width: 80px;
-    height: 80px;
-    background-color: #ccc;
+    width: 70px;
+    height: 70px;
+    background-color: #bdc3c7;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    border-radius: 5px;
-    transition: background-color 0.2s ease;
+    border-radius: 8px;
+    transition: background-color 0.2s ease, transform 0.2s;
 }
 
 .tile.active {
-    background-color: #4CAF50;
+    background-color: var(--accent-color) !important;
+    transform: scale(1.05);
 }
 
 .tile.wrong {
-    background-color: #f44336;
+    background-color: var(--danger-color) !important;
 }
 
-#score {
-    font-size: 1.5em;
-    margin-bottom: 20px;
-    font-weight: bold;
-}
-
-.controls {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-}
-
-#reset-button, .home-btn {
-    padding: 10px 20px;
-    font-size: 1em;
-    cursor: pointer;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    text-decoration: none;
-    transition: background-color 0.2s ease;
-}
-
-.home-btn {
-    background-color: #6c757d;
-}
-
-#reset-button:hover {
-    background-color: #0056b3;
-}
-
-/* 토글 위치 */
-.dark-toggle {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 999;
-}
-
-/* 스위치 */
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 50px;
-  height: 26px;
-}
-
-.switch input {
-  display: none;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  background: #ccc;
-  border-radius: 34px;
-  top: 0; left: 0; right: 0; bottom: 0;
-  transition: 0.3s;
-}
-
-.slider:before {
-  content: "";
-  position: absolute;
-  height: 20px;
-  width: 20px;
-  left: 3px;
-  bottom: 3px;
-  background: white;
-  border-radius: 50%;
-  transition: 0.3s;
-}
-
-/* ON 상태 */
-input:checked + .slider {
-  background: #4caf50;
-}
-
-input:checked + .slider:before {
-  transform: translateX(24px);
-}
-
-.slider:after {
-  content: "🌙";
-  position: absolute;
-  right: 6px;
-  top: 3px;
-  font-size: 14px;
-}
-
-/* 🌙 다크모드 스타일 */
-body.dark {
-  background: #121212;
-  color: #eee;
-}
-
-/* 컨테이너 배경 */
-body.dark .game-container {
-  background: #1e1e1e;
-}
-
-/* 버튼 / 링크 색상 */
-body.dark button,
-body.dark .home-btn {
-  background: #333;
-  color: #eee;
-}
-
-/* 타이머 바 배경 */
-body.dark #timer-container {
-  background: #333;
-}
-
-/* 게임 보드 배경 */
-body.dark #board-container {
-  background: #181818;
-  border-radius: 10px;
-  padding: 10px;
-}
-
-/* 게임 보드 컨테이너 */
-body.dark #game-container {
-  background: #181818;
-  border-radius: 10px;
-  padding: 10px;
-}
-
-/* 점수 글자 색 */
-body.dark #score {
-  color: #ffffff;  /* 🔥 추가 */
-}
-
-/* 빈칸 타일 */
-body.dark .empty.light {
-  background: #2a2a2a;
-}
-
-body.dark .empty.dark {
-  background: #1f1f1f;
-}
-
-/* 타일 그림자 (대비 유지) */
-body.dark .tile:not(.empty) {
-  box-shadow: 0 1px 2px rgba(255,255,255,0.1);
+/* 다크모드에서의 타일 색상 */
+body.dark .tile {
+    background-color: #34495e;
 }

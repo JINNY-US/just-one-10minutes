@@ -108,10 +108,19 @@ function handleTileClick(event) {
     const clickedTileId = parseInt(event.target.dataset.id);
     playerSequence.push(clickedTileId);
 
-    event.target.classList.add('active');
-    setTimeout(() => {
-        event.target.classList.remove('active');
-    }, 200);
+    const isCorrect = playerSequence[playerSequence.length - 1] === sequence[playerSequence.length - 1];
+    
+    if (isCorrect) {
+        event.target.classList.add('active');
+        setTimeout(() => {
+            event.target.classList.remove('active');
+        }, 200);
+    } else {
+        event.target.classList.add('wrong');
+        setTimeout(() => {
+            event.target.classList.remove('wrong');
+        }, 500);
+    }
 
     checkPlayerSequence();
 }
