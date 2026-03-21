@@ -29,9 +29,14 @@ function getDist(x1, y1, x2, y2) {
 const UPGRADES = [
     { id: 'sword_speed', name: '칼날 회전 강화', desc: '회전 칼날의 속도가 빨라집니다.', type: 'stat' },
     { id: 'sword_count', name: '칼날 개수 추가', desc: '회전하는 칼날이 하나 더 생깁니다.', type: 'weapon' },
+    { id: 'sword_dmg', name: '칼날 예리함 강화', desc: '칼날의 공격력이 20% 증가합니다.', type: 'stat' },
     { id: 'arrow_dmg', name: '추적 화살 강화', desc: '화살의 공격력이 강해집니다.', type: 'stat' },
+    { id: 'arrow_count', name: '멀티 샷', desc: '한 번에 발사하는 화살 개수가 늘어납니다.', type: 'weapon' },
     { id: 'hp_max', name: '최대 체력 증가', desc: '최대 체력이 20 증가합니다.', type: 'stat' },
-    { id: 'move_speed', name: '이동 속도 강화', desc: '이동 속도가 10% 증가합니다.', type: 'stat' },
+    { id: 'move_speed', name: '가벼운 발걸음', desc: '이동 속도가 2% 증가합니다.', type: 'stat' },
+    { id: 'armor', name: '강철 갑옷', desc: '받는 피해량이 2% 감소합니다.', type: 'stat' },
+    { id: 'shield', name: '에너지 실드', desc: '10초마다 피해를 1회 막아주는 보호막을 얻습니다.', type: 'skill' },
+    { id: 'burn', name: '화염 오오라', desc: '3초마다 주변 적들을 불태웁니다.', type: 'skill' },
     { id: 'magnet_range', name: '자성 강화', desc: '경험치를 끌어오는 범위가 넓어집니다.', type: 'stat' }
 ];
 
@@ -49,13 +54,24 @@ class Player {
         this.hp = 100;
         this.maxHp = 100;
         this.magnetRange = 100;
+        this.armor = 0; // 피해 감소율 (0.02 = 2%)
+        
+        this.hasShield = false;
+        this.shieldActive = false;
+        this.shieldTimer = 0;
+        this.shieldMaxCooldown = 10000; // 10초
+
+        this.hasBurn = false;
+        this.burnTimer = 0;
+        this.burnMaxCooldown = 3000; // 3초
+        
         this.weapons = [
-            { type: 'sword', level: 1, timer: 0 },
-            { type: 'arrow', level: 1, timer: 0, damage: 30 }
+            { type: 'sword', level: 1, timer: 0, damage: 0.5 },
+            { type: 'arrow', level: 1, timer: 0, damage: 30, count: 1 }
         ];
     }
 
-    update() {
+    update(dt) {
         let dx = 0, dy = 0;
         if (keys['KeyW']) dy -= 1;
         if (keys['KeyS']) dy += 1;
@@ -74,9 +90,66 @@ class Player {
         if (this.x > GAME_WIDTH) this.x = 0;
         if (this.y < 0) this.y = GAME_HEIGHT;
         if (this.y > GAME_HEIGHT) this.y = 0;
+
+        // 실드 쿨타임
+        if (this.hasShield && !this.shieldActive) {
+            this.shieldTimer += dt;
+            if (this.shieldTimer >= this.shieldMaxCooldown) {
+                this.shieldActive = true;
+                this.shieldTimer = 0;
+            }
+        }
+
+        // 화염 오오라 쿨타임
+        if (this.hasBurn) {
+            this.burnTimer += dt;
+            if (this.burnTimer >= this.burnMaxCooldown) {
+                this.activateBurn();
+                this.burnTimer = 0;
+            }
+        }
+    }
+
+    activateBurn() {
+        const burnRange = 150;
+        enemies.forEach(enemy => {
+            if (getDist(this.x, this.y, enemy.x, enemy.y) < burnRange) {
+                enemy.hp -= 50; // 즉시 큰 피해
+                if (enemy.hp <= 0) {
+                    killCount++;
+                    const dropType = Math.random() < 0.05 ? 'hp' : 'xp';
+                    drops.push(new Drop(enemy.x, enemy.y, dropType));
+                    enemy.dead = true;
+                }
+            }
+        });
+        enemies = enemies.filter(e => !e.dead);
+        // 화염 효과 파티클 (시각적 피드백)
+        this.showBurnEffect = true;
+        setTimeout(() => this.showBurnEffect = false, 500);
+    }
+
+    takeDamage(amount) {
+        if (this.shieldActive) {
+            this.shieldActive = false;
+            return; // 피해 무시
+        }
+        const reducedDamage = amount * (1 - this.armor);
+        this.hp -= reducedDamage;
+        if (this.hp <= 0) gameOver();
     }
 
     draw() {
+        // 화염 오오라 효과
+        if (this.showBurnEffect) {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, 150, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 69, 0, 0.2)';
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        // 플레이어 캐릭터
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fillStyle = '#3498db';
@@ -86,6 +159,17 @@ class Player {
         ctx.stroke();
         ctx.closePath();
 
+        // 실드 시각 효과
+        if (this.shieldActive) {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius + 5, 0, Math.PI * 2);
+            ctx.strokeStyle = '#00f2ff';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            ctx.closePath();
+        }
+
+        // 발 밑 HP 바
         const barWidth = 40;
         const barHeight = 6;
         ctx.fillStyle = '#444';
@@ -106,6 +190,7 @@ class Enemy {
         const baseSpeed = type === 'boss' ? 1.2 : 0.6 + Math.random() * 0.5;
         this.speed = Math.min(2.5, baseSpeed + (gameTime / 120)); 
         this.color = type === 'boss' ? '#e74c3c' : '#95a5a6';
+        this.dead = false;
     }
 
     update(player) {
@@ -164,7 +249,7 @@ class Drop {
     constructor(x, y, type = 'xp') {
         this.x = x;
         this.y = y;
-        this.type = type; // 'xp' or 'hp'
+        this.type = type;
         this.radius = type === 'hp' ? 6 : 4;
         this.isBeingPulled = false;
     }
@@ -182,7 +267,7 @@ class Drop {
     draw() {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = this.type === 'xp' ? '#2ecc71' : '#ff5252'; // 경험치는 초록, 체력은 빨강
+        ctx.fillStyle = this.type === 'xp' ? '#2ecc71' : '#ff5252';
         ctx.fill();
         ctx.strokeStyle = 'white';
         ctx.lineWidth = 1;
@@ -223,25 +308,25 @@ function update(time) {
     lastTime = time;
     gameTime += dt / 1000;
 
-    player.update();
+    player.update(dt);
 
+    // 무기 업데이트
     const arrowWeapon = player.weapons.find(w => w.type === 'arrow');
     if (arrowWeapon) {
         arrowWeapon.timer += dt;
         if (arrowWeapon.timer > 1200) {
-            const target = findNearestEnemy();
-            if (target) {
+            const nearestEnemies = findNearestEnemies(arrowWeapon.count);
+            nearestEnemies.forEach(target => {
                 projectiles.push(new Projectile(player.x, player.y, target.x, target.y, arrowWeapon.damage));
-                arrowWeapon.timer = 0;
-            }
+            });
+            arrowWeapon.timer = 0;
         }
     }
 
     enemies.forEach((enemy, eIdx) => {
         enemy.update(player);
         if (getDist(player.x, player.y, enemy.x, enemy.y) < player.radius + enemy.radius) {
-            player.hp -= 0.3;
-            if (player.hp <= 0) gameOver();
+            player.takeDamage(0.3);
         }
         projectiles.forEach((p, pIdx) => {
             if (getDist(p.x, p.y, enemy.x, enemy.y) < p.radius + enemy.radius) {
@@ -249,15 +334,15 @@ function update(time) {
                 projectiles.splice(pIdx, 1);
                 if (enemy.hp <= 0) {
                     killCount++;
-                    // 5% 확률로 체력 아이템, 나머지는 경험치 드랍
                     const dropType = Math.random() < 0.05 ? 'hp' : 'xp';
                     drops.push(new Drop(enemy.x, enemy.y, dropType));
-                    enemies.splice(eIdx, 1);
+                    enemy.dead = true;
                 }
             }
         });
     });
 
+    enemies = enemies.filter(e => !e.dead);
     projectiles.forEach(p => p.update());
     projectiles = projectiles.filter(p => p.life > 0);
 
@@ -268,7 +353,7 @@ function update(time) {
                 xp += 25;
                 if (xp >= nextXp) levelUp();
             } else if (drop.type === 'hp') {
-                player.hp = Math.min(player.maxHp, player.hp + 20); // 체력 20 회복
+                player.hp = Math.min(player.maxHp, player.hp + 20);
             }
             drops.splice(dIdx, 1);
         }
@@ -281,14 +366,10 @@ function update(time) {
     requestAnimationFrame(update);
 }
 
-function findNearestEnemy() {
-    let nearest = null;
-    let minDist = Infinity;
-    enemies.forEach(e => {
-        const d = getDist(player.x, player.y, e.x, e.y);
-        if (d < minDist) { minDist = d; nearest = e; }
-    });
-    return nearest;
+function findNearestEnemies(n) {
+    return [...enemies]
+        .sort((a, b) => getDist(player.x, player.y, a.x, a.y) - getDist(player.x, player.y, b.x, b.y))
+        .slice(0, n);
 }
 
 function render() {
@@ -318,18 +399,19 @@ function render() {
             ctx.fillStyle = 'rgba(241, 196, 15, 0.8)';
             ctx.fillRect(50, -4, 25, 8);
             ctx.restore();
-            enemies.forEach((enemy, eIdx) => {
+            enemies.forEach((enemy) => {
                 if (getDist(sx, sy, enemy.x, enemy.y) < 20 + enemy.radius) {
-                    enemy.hp -= 0.5;
+                    enemy.hp -= swordWeapon.damage;
                     if (enemy.hp <= 0) {
                         killCount++;
                         const dropType = Math.random() < 0.05 ? 'hp' : 'xp';
                         drops.push(new Drop(enemy.x, enemy.y, dropType));
-                        enemies.splice(eIdx, 1);
+                        enemy.dead = true;
                     }
                 }
             });
         }
+        enemies = enemies.filter(e => !e.dead);
     }
 }
 
@@ -366,15 +448,33 @@ function levelUp() {
 
 function applyUpgrade(up) {
     if (up.id === 'hp_max') { player.maxHp += 20; player.hp += 20; }
-    if (up.id === 'move_speed') player.speed += 0.3;
+    if (up.id === 'move_speed') player.speed *= 1.02; // 2%씩 증가
     if (up.id === 'magnet_range') player.magnetRange += 40;
+    if (up.id === 'armor') player.armor += 0.02; // 2% 피해 감소
+    if (up.id === 'shield') {
+        player.hasShield = true;
+        player.shieldActive = true;
+        player.shieldMaxCooldown = Math.max(3000, player.shieldMaxCooldown - 1000); // 쿨타임 감소
+    }
+    if (up.id === 'burn') {
+        player.hasBurn = true;
+        player.burnMaxCooldown = Math.max(1000, player.burnMaxCooldown - 300); // 쿨타임 감소
+    }
     if (up.id === 'sword_speed' || up.id === 'sword_count') {
         const w = player.weapons.find(w => w.type === 'sword');
         if (w) w.level++;
     }
+    if (up.id === 'sword_dmg') {
+        const w = player.weapons.find(w => w.type === 'sword');
+        if (w) w.damage *= 1.2;
+    }
     if (up.id === 'arrow_dmg') {
         const w = player.weapons.find(w => w.type === 'arrow');
-        if (w) { w.level++; w.damage += 15; }
+        if (w) w.damage += 15;
+    }
+    if (up.id === 'arrow_count') {
+        const w = player.weapons.find(w => w.type === 'arrow');
+        if (w) w.count++;
     }
 }
 
@@ -394,7 +494,6 @@ function init() {
     level = 1;
     xp = 0;
     nextXp = 100;
-    
     updateHUD();
     requestAnimationFrame(update);
 }
