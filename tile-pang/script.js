@@ -228,9 +228,10 @@ function checkSwapProducesMatch(r1, c1, r2, c2) {
 
     const matches = findMatches();
 
-    // 원래대로 복구
-    grid[r2][c2] = grid[r1][c1];
-    grid[r1][c1] = temp;
+    // 원래대로 복구 (다시 한 번 스왑)
+    const temp2 = grid[r1][c1];
+    grid[r1][c1] = grid[r2][c2];
+    grid[r2][c2] = temp2;
 
     return matches.length > 0;
 }
