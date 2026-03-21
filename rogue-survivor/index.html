@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ROGUE SURVIVOR - Roguelike Auto-Shooter</title>
+    <title>TILE SURVIVOR - Roguelike Auto-Shooter</title>
     <link rel="stylesheet" href="../common-game.css">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -16,7 +16,7 @@
     </div>
 
     <div class="game-container full-width">
-        <h1>ROGUE SURVIVOR</h1>
+        <h1>TILE SURVIVOR</h1>
         
         <div class="hud">
             <div class="hud-top">
@@ -31,7 +31,6 @@
             </div>
             <div class="hud-bottom">
                 <div class="stats">LEVEL: <span id="level-val">1</span> | KILL: <span id="kill-val">0</span></div>
-                <div class="gold-display">💰 <span id="gold-val">0</span></div>
             </div>
         </div>
 
@@ -40,6 +39,7 @@
             <div id="start-overlay">
                 <div class="menu-content">
                     <p>방향키로 이동하세요 (자동 공격)</p>
+                    <p style="font-size: 0.8rem; color: #888;">맵 끝으로 가면 반대편으로 이동합니다!</p>
                     <button id="start-btn" class="btn btn-accent">시작하기</button>
                 </div>
             </div>
@@ -50,16 +50,6 @@
                     <h2>LEVEL UP!</h2>
                     <p>강화할 스킬을 선택하세요</p>
                     <div id="upgrade-list" class="upgrade-list"></div>
-                </div>
-            </div>
-
-            <!-- 상점 오버레이 -->
-            <div id="shop-overlay" class="overlay hidden">
-                <div class="shop-modal">
-                    <h2>ITEM SHOP</h2>
-                    <p>골드로 아이템을 구매하세요</p>
-                    <div id="shop-list" class="shop-list"></div>
-                    <button id="close-shop-btn" class="btn btn-primary">사냥 계속하기</button>
                 </div>
             </div>
         </div>
