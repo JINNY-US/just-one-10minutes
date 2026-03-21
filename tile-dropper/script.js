@@ -138,29 +138,67 @@ function handleClick(index) {
   if (found.length >= 2) {
     animateRemove(found);
 
-    popSound.currentTime = 0;
-    popSound.play();
+    if (popSound) {
+      popSound.currentTime = 0;
+      popSound.play();
+    }
 
     setTimeout(() => {
       found.forEach(i => grid[i] = null);
       score += found.length;
       render();
+      
+      // 타일 제거 후 데드락 체크
+      checkDeadlock();
     }, 200);
 
   } else {
-    failSound.currentTime = 0;
-    failSound.play();
+    if (failSound) {
+      failSound.currentTime = 0;
+      failSound.play();
+    }
 
     time = Math.max(0, time - 10);
     updateUI();
   }
 }
 
+// 데드락 체크 및 처리
+function checkDeadlock() {
+  if (!isPlaying) return;
+  
+  if (!canMove()) {
+    setTimeout(() => {
+      alert("더 이상 터뜨릴 수 있는 타일이 없어 보드를 다시 생성합니다!");
+      generateGrid();
+      // 생성된 보드도 데드락일 수 있으므로 재귀적으로 확인
+      while (!canMove()) {
+        generateGrid();
+      }
+      render();
+    }, 500);
+  }
+}
+
+// 현재 보드에서 움직일 수 있는(터뜨릴 수 있는) 수인지 확인
+function canMove() {
+  for (let i = 0; i < grid.length; i++) {
+    // 빈 칸만 체크
+    if (grid[i] === null) {
+      const matches = findMatches(i);
+      if (matches.length >= 2) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 // 애니메이션
 function animateRemove(indices) {
   const tiles = document.querySelectorAll(".tile");
   indices.forEach(i => {
-    tiles[i].classList.add("removing");
+    if (tiles[i]) tiles[i].classList.add("removing");
   });
 }
 
