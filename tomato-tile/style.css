@@ -25,12 +25,16 @@
         --tile-gap: 2px;
     }
 }
-
 * {
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
+    user-select: none; /* 전체 요소 텍스트 선택 방지 */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 
+:root {
 /* 타이틀 검은색으로 변경 (공통 스타일에 이미 정의됨) */
 h1 {
     color: var(--text-light);
