@@ -132,6 +132,16 @@ h1 {
     font-weight: 800;
     position: relative;
     box-shadow: inset -2px -2px 0px rgba(0,0,0,0.1);
+    transition: transform 0.1s ease, box-shadow 0.1s ease, border 0.1s ease;
+    border: 2px solid transparent;
+}
+
+/* 선택된 타일 효과 */
+.tile.selected {
+    transform: scale(1.15);
+    z-index: 10;
+    box-shadow: 0 0 15px rgba(255, 204, 0, 0.8);
+    border: 2px solid #ffcc00;
 }
 
 /* 노란 토마토 스타일 */
@@ -139,6 +149,11 @@ h1 {
     background-color: #ffeb3b;
     color: #333;
     box-shadow: inset -2px -2px 0px rgba(0,0,0,0.1), 0 0 8px rgba(255, 235, 59, 0.4);
+}
+
+.tile.yellow.selected {
+    box-shadow: 0 0 20px rgba(255, 235, 59, 0.9);
+    border: 2px solid #ff5252;
 }
 
 .tile::before {
@@ -155,7 +170,9 @@ h1 {
     background-color: var(--empty-color);
     color: transparent;
     box-shadow: none;
-    opacity: 0.3;
+    opacity: 0.1; /* 더 투명하게 */
+    transform: scale(0.8); /* 빈 타일은 작게 */
+    pointer-events: none;
 }
 .tile.empty::before { display: none; }
 
@@ -219,10 +236,11 @@ h1 {
 /* 드래그 선택 박스 */
 .selection-box {
     position: absolute;
-    border: 2px solid #ffcc00;
-    background-color: rgba(255, 204, 0, 0.2);
+    border: 1.5px dashed rgba(255, 204, 0, 0.5);
+    background-color: rgba(255, 204, 0, 0.05);
     pointer-events: none;
     z-index: 100;
+    border-radius: 4px;
 }
 
 /* 토글 위치 */

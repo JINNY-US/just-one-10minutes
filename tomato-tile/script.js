@@ -149,6 +149,24 @@ function handleMove(e) {
     selectionBox.style.width = width + 'px';
     selectionBox.style.height = height + 'px';
     
+    // 실시간 타일 강조 표시
+    const boxRect = selectionBox.getBoundingClientRect();
+    
+    tiles.forEach(tile => {
+        if (tile.classList.contains('empty')) return;
+        
+        const tileRect = tile.getBoundingClientRect();
+        const centerX = tileRect.left + tileRect.width / 2;
+        const centerY = tileRect.top + tileRect.height / 2;
+
+        if (centerX >= boxRect.left && centerX <= boxRect.right &&
+            centerY >= boxRect.top && centerY <= boxRect.bottom) {
+            tile.classList.add('selected');
+        } else {
+            tile.classList.remove('selected');
+        }
+    });
+    
     // 드래그 중 스크롤 방지
     if (e.cancelable) e.preventDefault();
 }
@@ -157,9 +175,12 @@ function handleEnd(e) {
     if (!isDragging) return;
     isDragging = false;
     
-    // 박스가 사라지기 전에 영역 내 타일 체크
+    // 강조된 타일들을 체크하고 점수 계산
     checkSelection();
+    
+    // 상태 초기화
     selectionBox.classList.add('hidden');
+    tiles.forEach(tile => tile.classList.remove('selected'));
     
     if (e.cancelable && e.type === 'touchend') e.preventDefault();
 }
@@ -175,20 +196,12 @@ window.addEventListener('touchend', handleEnd, { passive: false });
 
 // 선택된 영역 확인
 function checkSelection() {
-    // selectionBox가 hidden이 아니어야 getBoundingClientRect가 정상 작동함
-    const boxRect = selectionBox.getBoundingClientRect();
     let sum = 0;
     let selectedTiles = [];
 
+    // 이미 selected 클래스가 붙은 타일들을 수집
     tiles.forEach(tile => {
-        if (tile.classList.contains('empty')) return;
-        
-        const tileRect = tile.getBoundingClientRect();
-        const centerX = tileRect.left + tileRect.width / 2;
-        const centerY = tileRect.top + tileRect.height / 2;
-
-        if (centerX >= boxRect.left && centerX <= boxRect.right &&
-            centerY >= boxRect.top && centerY <= boxRect.bottom) {
+        if (tile.classList.contains('selected') && !tile.classList.contains('empty')) {
             sum += parseInt(tile.dataset.value);
             selectedTiles.push(tile);
         }
@@ -202,7 +215,7 @@ function checkSelection() {
                 roundScore += 4; // 노란 토마토 개당 +4점
             }
             tile.classList.add('empty');
-            tile.classList.remove('yellow'); // 상태 초기화
+            tile.classList.remove('yellow', 'selected'); // 상태 초기화
         });
         
         score += roundScore;
