@@ -12,8 +12,7 @@ let selectedTile = null;
 
 const gameBoard = document.getElementById('game-board');
 const scoreDisplay = document.getElementById('score');
-const comboDisplay = document.getElementById('combo');
-const timerDisplay = document.getElementById('timer');
+const timerBar = document.getElementById('timer-bar');
 const startBtn = document.getElementById('start-btn');
 const resetBtn = document.getElementById('reset-btn');
 const modalResetBtn = document.getElementById('modal-reset-btn');
@@ -27,8 +26,7 @@ function initGame() {
     combo = 0;
     timeLeft = GAME_TIME;
     scoreDisplay.textContent = score;
-    comboDisplay.textContent = combo;
-    timerDisplay.textContent = timeLeft;
+    updateTimerBar();
     selectedTile = null;
     isAnimating = false;
     
@@ -157,12 +155,10 @@ async function resolveMatches() {
     const matches = findMatches();
     if (matches.length === 0) {
         combo = 0;
-        comboDisplay.textContent = combo;
         return;
     }
     
     combo++;
-    comboDisplay.textContent = combo;
     
     // 점수 계산 (콤보 보너스: 기본 점수 * 콤보)
     const points = matches.length * 10 * combo;
@@ -225,16 +221,21 @@ function updateBoard() {
     }
 }
 
+function updateTimerBar() {
+    const percentage = (timeLeft / GAME_TIME) * 100;
+    timerBar.style.width = Math.max(0, percentage) + '%';
+}
+
 // 게임 타이머
 function startTimer() {
     if (timerId) clearInterval(timerId);
     timerId = setInterval(() => {
-        timeLeft--;
-        timerDisplay.textContent = timeLeft;
+        timeLeft -= 0.1; // 0.1초 단위로 부드럽게 감소
+        updateTimerBar();
         if (timeLeft <= 0) {
             endGame();
         }
-    }, 1000);
+    }, 100);
 }
 
 function endGame() {
