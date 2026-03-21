@@ -1,0 +1,199 @@
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+    --bg-color: #fff9f9;
+    --card-bg: #fff;
+    --text-color: #333;
+    --border-color: #eee;
+    --btn-color: #ff5252;
+    --btn-hover: #e53935;
+    
+    /* Tile Colors */
+    --c0: #ff5252; /* Red */
+    --c1: #ffeb3b; /* Yellow */
+    --c2: #4caf50; /* Green */
+    --c3: #2196f3; /* Blue */
+    --c4: #9c27b0; /* Purple */
+    --c5: #ff9800; /* Orange */
+    --c6: #00bcd4; /* Cyan */
+    
+    --tile-size: 50px;
+    --tile-gap: 5px;
+}
+
+body.dark {
+    --bg-color: #121212;
+    --card-bg: #1e1e1e;
+    --text-color: #eee;
+    --border-color: #333;
+}
+
+body {
+    margin: 0;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Pretendard', sans-serif;
+    user-select: none;
+    overflow: hidden;
+    transition: background-color 0.3s;
+}
+
+.game-container {
+    text-align: center;
+    width: 100%;
+    max-width: 450px;
+}
+
+h1 {
+    color: var(--btn-color);
+    margin: 0 0 15px;
+    font-weight: 900;
+}
+
+.status-bar {
+    display: flex;
+    justify-content: space-around;
+    background: var(--card-bg);
+    padding: 10px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.status-item { display: flex; flex-direction: column; }
+.status-item .label { font-size: 0.7rem; color: #888; font-weight: 700; }
+.status-item .value { font-size: 1.2rem; font-weight: 900; color: var(--btn-color); }
+
+.board-wrapper {
+    position: relative;
+    padding: 10px;
+    background-color: var(--card-bg);
+    border: 4px solid var(--border-color);
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    display: inline-block;
+    touch-action: none;
+}
+
+.game-board {
+    display: grid;
+    grid-template-columns: repeat(7, var(--tile-size));
+    grid-template-rows: repeat(7, var(--tile-size));
+    gap: var(--tile-gap);
+}
+
+.tile {
+    width: var(--tile-size);
+    height: var(--tile-size);
+    border-radius: 12px;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2);
+}
+
+.tile.c0 { background-color: var(--c0); }
+.tile.c1 { background-color: var(--c1); }
+.tile.c2 { background-color: var(--c2); }
+.tile.c3 { background-color: var(--c3); }
+.tile.c4 { background-color: var(--c4); }
+.tile.c5 { background-color: var(--c5); }
+.tile.c6 { background-color: var(--c6); }
+
+.tile.selected {
+    transform: scale(0.9);
+    outline: 3px solid var(--text-color);
+    outline-offset: 2px;
+    z-index: 10;
+}
+
+.tile.matching {
+    animation: match-pop 0.3s forwards;
+}
+
+@keyframes match-pop {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+    100% { transform: scale(0); opacity: 0; }
+}
+
+.tile.falling {
+    animation: fall-down 0.3s ease-in;
+}
+
+@keyframes fall-down {
+    from { transform: translateY(-50px); opacity: 0.5; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* UI Elements */
+.start-overlay, .overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    display: flex; justify-content: center; align-items: center;
+    background-color: rgba(0,0,0,0.4);
+    backdrop-filter: blur(4px);
+    z-index: 50;
+    border-radius: 12px;
+}
+
+.overlay { position: fixed; z-index: 100; }
+.hidden { display: none !important; }
+
+.result-modal {
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.btn {
+    padding: 10px 20px;
+    font-size: 1rem;
+    font-weight: 700;
+    background-color: var(--btn-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+.btn:active { transform: scale(0.95); }
+.btn-start, .btn-large { padding: 15px 40px; font-size: 1.2rem; background-color: #4caf50; }
+.btn-back { background-color: #555; text-decoration: none; display: inline-block; }
+
+.footer { margin-top: 20px; }
+.bottom-menu { display: flex; justify-content: center; gap: 10px; }
+
+/* Mobile Adjustments */
+@media (max-width: 480px) {
+    :root {
+        --tile-size: 42px;
+        --tile-gap: 4px;
+    }
+}
+
+@media (max-width: 350px) {
+    :root {
+        --tile-size: 36px;
+        --tile-gap: 3px;
+    }
+}
+
+/* Dark Mode Toggle */
+.dark-toggle { position: fixed; top: 15px; right: 15px; z-index: 999; }
+.switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+.switch input { display: none; }
+.slider { position: absolute; cursor: pointer; background: #ccc; border-radius: 24px; top: 0; left: 0; right: 0; bottom: 0; transition: 0.3s; }
+.slider:after { content: "🌙"; position: absolute; right: 5px; top: 3px; font-size: 12px; }
+.slider:before { content: ""; position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
+input:checked + .slider { background: #4caf50; }
+input:checked + .slider:before { transform: translateX(20px); }
