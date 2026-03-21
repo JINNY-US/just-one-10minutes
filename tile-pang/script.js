@@ -240,8 +240,8 @@ function startTimer() {
 
 function endGame() {
     clearInterval(timerId);
-    finalScoreDisplay.textContent = score;
-    overlay.classList.remove('hidden');
+    alert(`게임 종료! 최종 점수: ${score}점`);
+    initGame();
 }
 
 function startGame() {
