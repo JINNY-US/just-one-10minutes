@@ -15,12 +15,9 @@ const scoreDisplay = document.getElementById('score');
 const timerBar = document.getElementById('timer-bar');
 const startBtn = document.getElementById('start-btn');
 const resetBtn = document.getElementById('reset-btn');
-const modalResetBtn = document.getElementById('modal-reset-btn');
 const startOverlay = document.getElementById('start-overlay');
-const overlay = document.getElementById('overlay');
-const finalScoreDisplay = document.getElementById('final-score');
 
-// 초기화
+// 초기화 (페이지 로드 시 호출)
 function initGame() {
     score = 0;
     combo = 0;
@@ -31,7 +28,7 @@ function initGame() {
     isAnimating = false;
     
     createBoard();
-    overlay.classList.add('hidden');
+    updateBoard(); // 생성된 보드를 화면에 반영
     startOverlay.classList.remove('hidden');
     if (timerId) clearInterval(timerId);
 }
@@ -67,11 +64,9 @@ function createBoard() {
     }
 }
 
-// ... (onTileClick, isAdjacent 생략 가능하지만 구조 유지를 위해 유지)
-
 // 타일 클릭 이벤트
 async function onTileClick(e) {
-    if (isAnimating || timeLeft <= 0) return;
+    if (isAnimating || timeLeft <= 0 || !startOverlay.classList.contains('hidden')) return;
     
     const tile = e.target;
     const r = parseInt(tile.dataset.r);
@@ -131,8 +126,6 @@ async function swapTiles(r1, c1, r2, c2) {
 // 매치 찾기
 function findMatches() {
     let matches = [];
-    
-    // 가로 매치
     for (let r = 0; r < SIZE; r++) {
         for (let c = 0; c < SIZE - 2; c++) {
             const color = grid[r][c];
@@ -141,8 +134,6 @@ function findMatches() {
             }
         }
     }
-    
-    // 세로 매치
     for (let c = 0; c < SIZE; c++) {
         for (let r = 0; r < SIZE - 2; r++) {
             const color = grid[r][c];
@@ -151,18 +142,14 @@ function findMatches() {
             }
         }
     }
-    
-    // 중복 제거
     return matches.filter((v, i, a) => a.findIndex(t => t.r === v.r && t.c === v.c) === i);
 }
 
-// 매치 해결 및 낙하 (재귀적 콤보 처리)
+// 매치 해결 및 낙하
 async function resolveMatches() {
     const matches = findMatches();
     if (matches.length === 0) {
         combo = 0;
-        
-        // 더 이상 움직일 수 있는 타일이 없는지 체크
         if (!hasPossibleMoves()) {
             setTimeout(() => {
                 alert("더 이상 움직일 수 있는 타일이 없어 보드를 다시 섞습니다!");
@@ -174,65 +161,43 @@ async function resolveMatches() {
     }
     
     combo++;
-    
-    // 점수 계산 (콤보 보너스: 기본 점수 * 콤보)
     const points = matches.length * 10 * combo;
     score += points;
     scoreDisplay.textContent = score;
     
-    // 애니메이션 표시
     matches.forEach(m => {
         const tile = gameBoard.children[m.r * SIZE + m.c];
         tile.classList.add('matching');
     });
     
     await new Promise(resolve => setTimeout(resolve, 300));
+    matches.forEach(m => grid[m.r][m.c] = null);
     
-    // 타일 제거
-    matches.forEach(m => {
-        grid[m.r][m.c] = null;
-    });
-    
-    // 낙하 처리
     dropTiles();
     updateBoard();
     
     await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // 재귀적으로 다음 매치 확인 (콤보)
     await resolveMatches();
 }
 
-// 움직일 수 있는 타일이 있는지 확인
 function hasPossibleMoves() {
     for (let r = 0; r < SIZE; r++) {
         for (let c = 0; c < SIZE; c++) {
-            // 오른쪽 타일과 교체 시뮬레이션
-            if (c < SIZE - 1) {
-                if (checkSwapProducesMatch(r, c, r, c + 1)) return true;
-            }
-            // 아래 타일과 교체 시뮬레이션
-            if (r < SIZE - 1) {
-                if (checkSwapProducesMatch(r, c, r + 1, c)) return true;
-            }
+            if (c < SIZE - 1 && checkSwapProducesMatch(r, c, r, c + 1)) return true;
+            if (r < SIZE - 1 && checkSwapProducesMatch(r, c, r + 1, c)) return true;
         }
     }
     return false;
 }
 
 function checkSwapProducesMatch(r1, c1, r2, c2) {
-    // 임시 교체
     const temp = grid[r1][c1];
     grid[r1][c1] = grid[r2][c2];
     grid[r2][c2] = temp;
-
     const matches = findMatches();
-
-    // 원래대로 복구 (다시 한 번 스왑)
     const temp2 = grid[r1][c1];
     grid[r1][c1] = grid[r2][c2];
     grid[r2][c2] = temp2;
-
     return matches.length > 0;
 }
 
@@ -240,20 +205,15 @@ function dropTiles() {
     for (let c = 0; c < SIZE; c++) {
         let emptyRows = [];
         for (let r = SIZE - 1; r >= 0; r--) {
-            if (grid[r][c] === null) {
-                emptyRows.push(r);
-            } else if (emptyRows.length > 0) {
+            if (grid[r][c] === null) emptyRows.push(r);
+            else if (emptyRows.length > 0) {
                 const targetR = emptyRows.shift();
                 grid[targetR][c] = grid[r][c];
                 grid[r][c] = null;
                 emptyRows.push(r);
             }
         }
-        
-        // 새 타일 생성
-        emptyRows.forEach(r => {
-            grid[r][c] = Math.floor(Math.random() * COLORS);
-        });
+        emptyRows.forEach(r => grid[r][c] = Math.floor(Math.random() * COLORS));
     }
 }
 
@@ -263,8 +223,7 @@ function updateBoard() {
             const tile = gameBoard.children[r * SIZE + c];
             const color = grid[r][c];
             tile.className = `tile c${color}`;
-            if (color === null) tile.style.opacity = '0';
-            else tile.style.opacity = '1';
+            tile.style.opacity = (color === null) ? '0' : '1';
         }
     }
 }
@@ -274,15 +233,12 @@ function updateTimerBar() {
     timerBar.style.width = Math.max(0, percentage) + '%';
 }
 
-// 게임 타이머
 function startTimer() {
     if (timerId) clearInterval(timerId);
     timerId = setInterval(() => {
-        timeLeft -= 0.1; // 0.1초 단위로 부드럽게 감소
+        timeLeft -= 0.1;
         updateTimerBar();
-        if (timeLeft <= 0) {
-            endGame();
-        }
+        if (timeLeft <= 0) endGame();
     }, 100);
 }
 
@@ -293,21 +249,12 @@ function endGame() {
 }
 
 function startGame() {
-    initGame();
     startOverlay.classList.add('hidden');
     startTimer();
 }
 
-// 이벤트 바인딩
 startBtn.addEventListener('click', startGame);
-resetBtn.addEventListener('click', () => {
-    initGame();
-    startGame();
-});
-modalResetBtn.addEventListener('click', () => {
-    initGame();
-    startGame();
-});
+resetBtn.addEventListener('click', initGame);
 
-// 초기 보드 생성
+// 초기 보드 생성 및 표시
 initGame();
