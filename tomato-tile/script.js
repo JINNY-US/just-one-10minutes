@@ -14,8 +14,6 @@ const gameBoard = document.getElementById('game-board');
 const selectionBox = document.getElementById('selection-box');
 const scoreDisplay = document.getElementById('score');
 const timerBar = document.getElementById('timer-bar');
-const overlay = document.getElementById('overlay');
-const finalScoreDisplay = document.getElementById('final-score');
 const startBtn = document.getElementById('start-btn');
 const resetBtn = document.getElementById('reset-btn');
 const startOverlay = document.getElementById('start-overlay');
@@ -24,13 +22,12 @@ const startOverlay = document.getElementById('start-overlay');
 function initGame() {
     score = 0;
     timeLeft = GAME_TIME;
-    scoreDisplay.textContent = score;
+    scoreDisplay.textContent = 'Score: ' + score;
     updateTimerBar();
     createBoard();
-    overlay.classList.add('hidden');
-    startOverlay.classList.remove('hidden');
+    if (startOverlay) startOverlay.style.display = "flex";
     isGameActive = false;
-    startBtn.disabled = false;
+    if (startBtn) startBtn.disabled = false;
 }
 
 // 보드 생성
@@ -64,8 +61,8 @@ function createBoard() {
 function startGame() {
     if (isGameActive) return;
     isGameActive = true;
-    startBtn.disabled = true;
-    startOverlay.classList.add('hidden');
+    if (startBtn) startBtn.disabled = true;
+    if (startOverlay) startOverlay.style.display = "none";
     
     if (timerId) clearInterval(timerId);
     timerId = setInterval(() => {
@@ -79,7 +76,7 @@ function startGame() {
 
 function updateTimerBar() {
     const percentage = (timeLeft / GAME_TIME) * 100;
-    timerBar.style.width = Math.max(0, percentage) + '%';
+    if (timerBar) timerBar.style.width = Math.max(0, percentage) + '%';
 }
 
 function endGame() {
@@ -96,11 +93,11 @@ function resetGame() {
 }
 
 // 이벤트 리스너 등록
-startBtn.addEventListener('click', startGame);
-resetBtn.addEventListener('click', resetGame);
+if (startBtn) startBtn.addEventListener('click', startGame);
+if (resetBtn) resetBtn.addEventListener('click', resetGame);
 
-// 드래그 로직
-const boardWrapper = document.querySelector('.board-wrapper');
+// 드래그 로직 (board-container 기준)
+const boardContainer = document.getElementById('board-container');
 
 function handleStart(e) {
     if (!isGameActive) return;
@@ -112,7 +109,7 @@ function handleStart(e) {
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     
-    const rect = boardWrapper.getBoundingClientRect();
+    const rect = boardContainer.getBoundingClientRect();
     startX = clientX - rect.left;
     startY = clientY - rect.top;
     
@@ -122,11 +119,7 @@ function handleStart(e) {
     selectionBox.style.height = '0px';
     selectionBox.classList.remove('hidden');
 
-    // 터치 이벤트인 경우 브라우저 기본 동작(스크롤 등) 방지
-    if (e.type === 'touchstart') {
-        // Passive: false가 설정되어 있어야 작동함
-        if (e.cancelable) e.preventDefault();
-    }
+    if (e.type === 'touchstart' && e.cancelable) e.preventDefault();
 }
 
 function handleMove(e) {
@@ -135,7 +128,7 @@ function handleMove(e) {
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
-    const rect = boardWrapper.getBoundingClientRect();
+    const rect = boardContainer.getBoundingClientRect();
     const currentX = clientX - rect.left;
     const currentY = clientY - rect.top;
 
@@ -167,7 +160,6 @@ function handleMove(e) {
         }
     });
     
-    // 드래그 중 스크롤 방지
     if (e.cancelable) e.preventDefault();
 }
 
@@ -175,22 +167,18 @@ function handleEnd(e) {
     if (!isDragging) return;
     isDragging = false;
     
-    // 강조된 타일들을 체크하고 점수 계산
     checkSelection();
-    
-    // 상태 초기화
     selectionBox.classList.add('hidden');
     tiles.forEach(tile => tile.classList.remove('selected'));
     
     if (e.cancelable && e.type === 'touchend') e.preventDefault();
 }
 
-// 이벤트 등록 (Passive: false를 통해 preventDefault 가능하게 설정)
-boardWrapper.addEventListener('mousedown', handleStart);
+boardContainer.addEventListener('mousedown', handleStart);
 window.addEventListener('mousemove', handleMove, { passive: false });
 window.addEventListener('mouseup', handleEnd);
 
-boardWrapper.addEventListener('touchstart', handleStart, { passive: false });
+boardContainer.addEventListener('touchstart', handleStart, { passive: false });
 window.addEventListener('touchmove', handleMove, { passive: false });
 window.addEventListener('touchend', handleEnd, { passive: false });
 
@@ -199,7 +187,6 @@ function checkSelection() {
     let sum = 0;
     let selectedTiles = [];
 
-    // 이미 selected 클래스가 붙은 타일들을 수집
     tiles.forEach(tile => {
         if (tile.classList.contains('selected') && !tile.classList.contains('empty')) {
             sum += parseInt(tile.dataset.value);
@@ -215,13 +202,12 @@ function checkSelection() {
                 roundScore += 4; // 노란 토마토 개당 +4점
             }
             tile.classList.add('empty');
-            tile.classList.remove('yellow', 'selected'); // 상태 초기화
+            tile.classList.remove('yellow', 'selected');
         });
         
         score += roundScore;
-        scoreDisplay.textContent = score;
+        scoreDisplay.textContent = 'Score: ' + score;
     }
 }
 
-// 초기 실행
 initGame();

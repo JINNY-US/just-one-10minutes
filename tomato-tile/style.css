@@ -1,30 +1,7 @@
-* {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-}
-
 :root {
     --tomato-color: #ff5252;
-    --bg-color: #fff9f9;
-    --card-bg: #fff;
-    --empty-color: #f0f0f0;
-    --text-color: #333;
-    --btn-color: #ff5252;
-    --btn-hover: #e53935;
-    --border-color: #ffdcdc;
-    --timer-bg: #ffebee;
     --tile-size: 34px;
     --tile-gap: 4px;
-}
-
-/* 🌙 다크모드 스타일 */
-body.dark {
-    --bg-color: #121212;
-    --card-bg: #1e1e1e;
-    --empty-color: #2a2a2a;
-    --text-color: #eee;
-    --border-color: #333;
-    --timer-bg: #333;
 }
 
 /* 모바일 대응 */
@@ -49,74 +26,34 @@ body.dark {
     }
 }
 
-/* 바디 스타일 */
-body {
-    margin: 0;
-    padding: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
-    user-select: none;
-    overflow: hidden; /* 모바일에서 전체 스크롤 방지 */
-    transition: background-color 0.3s, color 0.3s;
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
 }
 
+/* 타이틀 검은색으로 변경 (공통 스타일에 이미 정의됨) */
 h1 {
-    color: var(--tomato-color);
+    color: var(--text-light);
     margin: 0 0 10px 0;
     font-size: clamp(1.5rem, 5vw, 2.5rem);
     font-weight: 900;
 }
 
+body.dark h1 {
+    color: var(--text-dark);
+}
+
 .game-container {
-    text-align: center;
-    position: relative;
-    width: 100%;
-    max-width: 800px;
-}
-
-/* 상단 타이머 바 */
-.timer-wrapper {
-    width: 90%;
-    max-width: 600px;
-    height: 12px;
-    background-color: var(--timer-bg);
-    border-radius: 10px;
-    margin: 0 auto 15px;
-    overflow: hidden;
-    border: 2px solid var(--border-color);
-}
-
-.timer-bar {
-    height: 100%;
-    width: 100%;
-    background-color: var(--tomato-color);
-    transition: width 0.1s linear;
+    max-width: 800px; /* 토마토 타일 보드는 가로로 기니까 더 넓게 설정 */
 }
 
 /* 게임 보드 */
-.board-wrapper {
-    position: relative;
-    padding: 8px;
-    background-color: var(--card-bg);
-    border: 4px solid var(--border-color);
-    border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-    cursor: crosshair;
-    display: inline-block;
-    max-width: 98vw;
-    touch-action: none; /* 드래그 시 스크롤 방지 */
-}
-
 .game-board {
     display: grid;
     grid-template-columns: repeat(17, var(--tile-size));
     grid-template-rows: repeat(11, var(--tile-size));
     gap: var(--tile-gap);
+    cursor: crosshair;
 }
 
 .tile {
@@ -167,71 +104,21 @@ h1 {
 }
 
 .tile.empty {
-    background-color: var(--empty-color);
+    background-color: #f0f0f0;
     color: transparent;
     box-shadow: none;
-    opacity: 0.1; /* 더 투명하게 */
-    transform: scale(0.8); /* 빈 타일은 작게 */
+    opacity: 0.1;
+    transform: scale(0.8);
     pointer-events: none;
 }
+
+body.dark .tile.empty {
+    background-color: #2a2a2a;
+}
+
 .tile.empty::before { display: none; }
 
 .hidden { display: none !important; }
-
-/* 시작 오버레이 */
-.start-overlay {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: rgba(0,0,0,0.4);
-    backdrop-filter: blur(2px);
-    z-index: 50;
-    border-radius: 8px;
-}
-
-.start-overlay.hidden { display: none; }
-
-/* 버튼 스타일 */
-.btn {
-    padding: 8px 16px;
-    font-size: 1rem;
-    font-weight: 700;
-    background-color: var(--btn-color);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    text-decoration: none;
-    box-shadow: 0 4px 0px rgba(0,0,0,0.1);
-    transition: transform 0.1s, background-color 0.2s;
-}
-
-.btn-start {
-    font-size: 1.3rem;
-    padding: 12px 30px;
-    background-color: #4caf50;
-    box-shadow: 0 6px 0px #388e3c;
-}
-
-.footer {
-    margin-top: 15px;
-    background: var(--card-bg);
-    padding: 10px;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-}
-
-.score-board {
-    font-size: 1.2rem;
-    font-weight: 700;
-    margin-bottom: 10px;
-}
-.score-board span { color: var(--tomato-color); font-size: 1.5rem; }
-
-.bottom-menu { display: flex; justify-content: center; gap: 8px; }
-.btn-back { background-color: #555; }
 
 /* 드래그 선택 박스 */
 .selection-box {
@@ -243,46 +130,8 @@ h1 {
     border-radius: 4px;
 }
 
-/* 토글 위치 */
-.dark-toggle {
-    position: fixed;
-    top: 15px;
-    right: 15px;
-    z-index: 999;
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
 }
-
-.switch {
-    position: relative;
-    display: inline-block;
-    width: 44px;
-    height: 24px;
-}
-.switch input { display: none; }
-.slider {
-    position: absolute;
-    cursor: pointer;
-    background: #ccc;
-    border-radius: 24px;
-    top: 0; left: 0; right: 0; bottom: 0;
-    transition: 0.3s;
-}
-.slider:after {
-    content: "🌙";
-    position: absolute;
-    right: 5px;
-    top: 3px;
-    font-size: 12px;
-}
-.slider:before {
-    content: "";
-    position: absolute;
-    height: 18px;
-    width: 18px;
-    left: 3px;
-    bottom: 3px;
-    background: white;
-    border-radius: 50%;
-    transition: 0.3s;
-}
-input:checked + .slider { background: #4caf50; }
-input:checked + .slider:before { transform: translateX(20px); }

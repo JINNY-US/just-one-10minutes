@@ -22,14 +22,14 @@ function initGame() {
     score = 0;
     combo = 0;
     timeLeft = GAME_TIME;
-    scoreDisplay.textContent = score;
+    scoreDisplay.textContent = 'Score: ' + score;
     updateTimerBar();
     selectedTile = null;
     isAnimating = false;
     
     createBoard();
     updateBoard(); // 생성된 보드를 화면에 반영
-    startOverlay.classList.remove('hidden');
+    if (startOverlay) startOverlay.style.display = "flex";
     if (timerId) clearInterval(timerId);
 }
 
@@ -66,7 +66,7 @@ function createBoard() {
 
 // 타일 클릭 이벤트
 async function onTileClick(e) {
-    if (isAnimating || timeLeft <= 0 || !startOverlay.classList.contains('hidden')) return;
+    if (isAnimating || timeLeft <= 0 || (startOverlay && startOverlay.style.display !== "none")) return;
     
     const tile = e.target;
     const r = parseInt(tile.dataset.r);
@@ -163,7 +163,7 @@ async function resolveMatches() {
     combo++;
     const points = matches.length * 10 * combo;
     score += points;
-    scoreDisplay.textContent = score;
+    scoreDisplay.textContent = 'Score: ' + score;
     
     matches.forEach(m => {
         const tile = gameBoard.children[m.r * SIZE + m.c];
@@ -230,7 +230,7 @@ function updateBoard() {
 
 function updateTimerBar() {
     const percentage = (timeLeft / GAME_TIME) * 100;
-    timerBar.style.width = Math.max(0, percentage) + '%';
+    if (timerBar) timerBar.style.width = Math.max(0, percentage) + '%';
 }
 
 function startTimer() {
@@ -249,12 +249,12 @@ function endGame() {
 }
 
 function startGame() {
-    startOverlay.classList.add('hidden');
+    if (startOverlay) startOverlay.style.display = "none";
     startTimer();
 }
 
-startBtn.addEventListener('click', startGame);
-resetBtn.addEventListener('click', initGame);
+if (startBtn) startBtn.addEventListener('click', startGame);
+if (resetBtn) resetBtn.addEventListener('click', initGame);
 
 // 초기 보드 생성 및 표시
 initGame();

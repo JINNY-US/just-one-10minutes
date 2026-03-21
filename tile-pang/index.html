@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TILE PANG - Match 3 Puzzle</title>
+    <link rel="stylesheet" href="../common-game.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,23 +18,22 @@
     <div class="game-container">
         <h1>TILE PANG</h1>
         
-        <div class="timer-wrapper">
-            <div id="timer-bar" class="timer-bar"></div>
+        <div id="timer-container">
+            <div id="timer-bar"></div>
         </div>
 
-        <div class="board-wrapper">
+        <div id="board-container">
             <div id="game-board" class="game-board"></div>
-            <div id="start-overlay" class="start-overlay">
-                <button id="start-btn" class="btn btn-start">게임 시작</button>
+            <div id="start-overlay">
+                <button id="start-btn" class="btn btn-accent">시작하기</button>
             </div>
         </div>
 
-        <div class="footer">
-            <div class="score-board">현재 점수: <span id="score">0</span></div>
-            <div class="bottom-menu">
-                <button id="reset-btn" class="btn">다시 하기</button>
-                <a href="../index.html" class="btn btn-back">돌아가기</a>
-            </div>
+        <div id="score">Score: 0</div>
+
+        <div class="controls">
+            <button id="reset-btn" class="btn btn-primary">다시하기</button>
+            <a href="../index.html" class="home-btn">돌아가기</a>
         </div>
     </div>
 

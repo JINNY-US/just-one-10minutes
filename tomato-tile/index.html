@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TOMATO TILE</title>
+    <title>TOMATO TILE - 합이 10인 토마토 찾기</title>
+    <link rel="stylesheet" href="../common-game.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,38 +14,30 @@
             <span class="slider"></span>
         </label>
     </div>
+
     <div class="game-container">
         <h1>TOMATO TILE</h1>
         
-        <div class="timer-wrapper">
-            <div id="timer-bar" class="timer-bar"></div>
+        <div id="timer-container">
+            <div id="timer-bar"></div>
         </div>
 
-        <div class="board-wrapper">
+        <div id="board-container">
             <div id="game-board" class="game-board"></div>
             <div id="selection-box" class="selection-box hidden"></div>
-            <!-- 시작 버튼을 보드 안으로 이동 -->
-            <div id="start-overlay" class="start-overlay">
-                <button id="start-btn" class="btn btn-start">게임 시작</button>
+            <div id="start-overlay">
+                <button id="start-btn" class="btn btn-accent">시작하기</button>
             </div>
         </div>
 
-        <div class="footer">
-            <div class="score-board">현재 점수: <span id="score">0</span></div>
-            <div class="bottom-menu">
-                <button id="reset-btn" class="btn">다시 하기</button>
-                <a href="../index.html" class="btn btn-back">돌아가기</a>
-            </div>
-        </div>
+        <div id="score">Score: 0</div>
 
-        <div id="overlay" class="overlay hidden">
-            <div class="result-modal">
-                <h2>게임 종료!</h2>
-                <div class="final-score-text">최종 점수: <span id="final-score">0</span>점</div>
-                <button onclick="resetGame()" class="btn btn-large">한 판 더!</button>
-            </div>
+        <div class="controls">
+            <button id="reset-btn" class="btn btn-primary">다시하기</button>
+            <a href="../index.html" class="home-btn">돌아가기</a>
         </div>
     </div>
+
     <script src="../common-game.js"></script>
     <script src="script.js"></script>
 </body>
