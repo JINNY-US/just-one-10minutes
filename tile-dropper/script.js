@@ -247,14 +247,8 @@ function updateUI() {
 
   const percent = (time / MAX_TIME) * 100;
   timerBar.style.width = percent + "%";
-
-  if (percent < 30) {
-    timerBar.style.background = "red";
-  } else if (percent < 60) {
-    timerBar.style.background = "orange";
-  } else {
-    timerBar.style.background = "#4caf50";
-  }
+  // 다른 게임들과 통일하기 위해 항상 빨간색 유지
+  timerBar.style.background = "var(--danger-color)";
 }
 
 // 초기화: 게임 시작 전에도 보드 레이아웃을 잡기 위해 실행
