@@ -36,32 +36,38 @@ function initGame() {
     if (timerId) clearInterval(timerId);
 }
 
-// 보드 생성 (초기 매치 방지)
+// 보드 생성 (초기 매치 방지 및 이동 가능성 보장)
 function createBoard() {
-    grid = [];
-    gameBoard.innerHTML = '';
-    
-    for (let r = 0; r < SIZE; r++) {
-        grid[r] = [];
-        for (let c = 0; c < SIZE; c++) {
-            let color;
-            do {
-                color = Math.floor(Math.random() * COLORS);
-            } while (
-                (c >= 2 && grid[r][c-1] === color && grid[r][c-2] === color) ||
-                (r >= 2 && grid[r-1][c] === color && grid[r-2][c] === color)
-            );
-            grid[r][c] = color;
-            
-            const tile = document.createElement('div');
-            tile.className = `tile c${color}`;
-            tile.dataset.r = r;
-            tile.dataset.c = c;
-            tile.addEventListener('click', onTileClick);
-            gameBoard.appendChild(tile);
+    let hasMove = false;
+    while (!hasMove) {
+        grid = [];
+        gameBoard.innerHTML = '';
+        
+        for (let r = 0; r < SIZE; r++) {
+            grid[r] = [];
+            for (let c = 0; c < SIZE; c++) {
+                let color;
+                do {
+                    color = Math.floor(Math.random() * COLORS);
+                } while (
+                    (c >= 2 && grid[r][c-1] === color && grid[r][c-2] === color) ||
+                    (r >= 2 && grid[r-1][c] === color && grid[r-2][c] === color)
+                );
+                grid[r][c] = color;
+                
+                const tile = document.createElement('div');
+                tile.className = `tile c${color}`;
+                tile.dataset.r = r;
+                tile.dataset.c = c;
+                tile.addEventListener('click', onTileClick);
+                gameBoard.appendChild(tile);
+            }
         }
+        hasMove = hasPossibleMoves();
     }
 }
+
+// ... (onTileClick, isAdjacent 생략 가능하지만 구조 유지를 위해 유지)
 
 // 타일 클릭 이벤트
 async function onTileClick(e) {
@@ -77,7 +83,7 @@ async function onTileClick(e) {
         
         if (isAdjacent(prevR, prevC, r, c)) {
             await swapTiles(prevR, prevC, r, c);
-            selectedTile.classList.remove('selected');
+            if (selectedTile) selectedTile.classList.remove('selected');
             selectedTile = null;
         } else {
             selectedTile.classList.remove('selected');
@@ -155,6 +161,15 @@ async function resolveMatches() {
     const matches = findMatches();
     if (matches.length === 0) {
         combo = 0;
+        
+        // 더 이상 움직일 수 있는 타일이 없는지 체크
+        if (!hasPossibleMoves()) {
+            setTimeout(() => {
+                alert("더 이상 움직일 수 있는 타일이 없어 보드를 다시 섞습니다!");
+                createBoard();
+                updateBoard();
+            }, 500);
+        }
         return;
     }
     
@@ -186,6 +201,38 @@ async function resolveMatches() {
     
     // 재귀적으로 다음 매치 확인 (콤보)
     await resolveMatches();
+}
+
+// 움직일 수 있는 타일이 있는지 확인
+function hasPossibleMoves() {
+    for (let r = 0; r < SIZE; r++) {
+        for (let c = 0; c < SIZE; c++) {
+            // 오른쪽 타일과 교체 시뮬레이션
+            if (c < SIZE - 1) {
+                if (checkSwapProducesMatch(r, c, r, c + 1)) return true;
+            }
+            // 아래 타일과 교체 시뮬레이션
+            if (r < SIZE - 1) {
+                if (checkSwapProducesMatch(r, c, r + 1, c)) return true;
+            }
+        }
+    }
+    return false;
+}
+
+function checkSwapProducesMatch(r1, c1, r2, c2) {
+    // 임시 교체
+    const temp = grid[r1][c1];
+    grid[r1][c1] = grid[r2][c2];
+    grid[r2][c2] = temp;
+
+    const matches = findMatches();
+
+    // 원래대로 복구
+    grid[r2][c2] = grid[r1][c1];
+    grid[r1][c1] = temp;
+
+    return matches.length > 0;
 }
 
 function dropTiles() {
