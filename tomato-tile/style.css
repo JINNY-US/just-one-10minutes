@@ -159,6 +159,8 @@ h1 {
 }
 .tile.empty::before { display: none; }
 
+.hidden { display: none !important; }
+
 /* 시작 오버레이 */
 .start-overlay {
     position: absolute;
