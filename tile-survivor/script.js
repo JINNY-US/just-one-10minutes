@@ -161,10 +161,11 @@ class Projectile {
 }
 
 class Drop {
-    constructor(x, y) {
+    constructor(x, y, type = 'xp') {
         this.x = x;
         this.y = y;
-        this.radius = 4;
+        this.type = type; // 'xp' or 'hp'
+        this.radius = type === 'hp' ? 6 : 4;
         this.isBeingPulled = false;
     }
 
@@ -181,8 +182,11 @@ class Drop {
     draw() {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = '#2ecc71';
+        ctx.fillStyle = this.type === 'xp' ? '#2ecc71' : '#ff5252'; // 경험치는 초록, 체력은 빨강
         ctx.fill();
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 1;
+        ctx.stroke();
         ctx.closePath();
     }
 }
@@ -245,7 +249,9 @@ function update(time) {
                 projectiles.splice(pIdx, 1);
                 if (enemy.hp <= 0) {
                     killCount++;
-                    drops.push(new Drop(enemy.x, enemy.y));
+                    // 5% 확률로 체력 아이템, 나머지는 경험치 드랍
+                    const dropType = Math.random() < 0.05 ? 'hp' : 'xp';
+                    drops.push(new Drop(enemy.x, enemy.y, dropType));
                     enemies.splice(eIdx, 1);
                 }
             }
@@ -258,8 +264,12 @@ function update(time) {
     drops.forEach((drop, dIdx) => {
         drop.update(player);
         if (getDist(player.x, player.y, drop.x, drop.y) < player.radius + 10) {
-            xp += 25;
-            if (xp >= nextXp) levelUp();
+            if (drop.type === 'xp') {
+                xp += 25;
+                if (xp >= nextXp) levelUp();
+            } else if (drop.type === 'hp') {
+                player.hp = Math.min(player.maxHp, player.hp + 20); // 체력 20 회복
+            }
             drops.splice(dIdx, 1);
         }
     });
@@ -313,7 +323,8 @@ function render() {
                     enemy.hp -= 0.5;
                     if (enemy.hp <= 0) {
                         killCount++;
-                        drops.push(new Drop(enemy.x, enemy.y));
+                        const dropType = Math.random() < 0.05 ? 'hp' : 'xp';
+                        drops.push(new Drop(enemy.x, enemy.y, dropType));
                         enemies.splice(eIdx, 1);
                     }
                 }
