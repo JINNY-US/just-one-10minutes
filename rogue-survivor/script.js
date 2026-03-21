@@ -378,6 +378,7 @@ document.getElementById('start-btn').onclick = startGame;
 document.getElementById('reset-btn').onclick = resetGame;
 
 function gameOver() {
+    if (!isPlaying) return; // 이미 게임 오버 처리 중이면 무시
     isPlaying = false;
     const finalScore = Math.floor(gameTime) + killCount;
     alert(`게임 오버! 최종 점수: ${finalScore}점 (생존: ${Math.floor(gameTime)}초, 처치: ${killCount}마리)`);
