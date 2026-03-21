@@ -12,7 +12,7 @@ let gameTime = 0;
 let killCount = 0;
 let level = 1;
 let xp = 0;
-let nextXp = 100;
+let nextXp = 200; // 초기 필요 경험치 상향 (100 -> 200)
 let lastTime = 0;
 
 // 입력 관리
@@ -54,19 +54,19 @@ class Player {
         this.hp = 100;
         this.maxHp = 100;
         this.magnetRange = 100;
-        this.armor = 0; // 피해 감소율 (0.02 = 2%)
+        this.armor = 0;
         
         this.hasShield = false;
         this.shieldActive = false;
         this.shieldTimer = 0;
-        this.shieldMaxCooldown = 10000; // 10초
+        this.shieldMaxCooldown = 10000;
 
         this.hasBurn = false;
         this.burnTimer = 0;
-        this.burnMaxCooldown = 3000; // 3초
+        this.burnMaxCooldown = 3000;
         
         this.weapons = [
-            { type: 'sword', level: 1, timer: 0, damage: 0.5 },
+            { type: 'sword', speedLevel: 1, countLevel: 1, damage: 0.5 },
             { type: 'arrow', level: 1, timer: 0, damage: 30, count: 1 }
         ];
     }
@@ -91,7 +91,6 @@ class Player {
         if (this.y < 0) this.y = GAME_HEIGHT;
         if (this.y > GAME_HEIGHT) this.y = 0;
 
-        // 실드 쿨타임
         if (this.hasShield && !this.shieldActive) {
             this.shieldTimer += dt;
             if (this.shieldTimer >= this.shieldMaxCooldown) {
@@ -100,7 +99,6 @@ class Player {
             }
         }
 
-        // 화염 오오라 쿨타임
         if (this.hasBurn) {
             this.burnTimer += dt;
             if (this.burnTimer >= this.burnMaxCooldown) {
@@ -114,7 +112,7 @@ class Player {
         const burnRange = 150;
         enemies.forEach(enemy => {
             if (getDist(this.x, this.y, enemy.x, enemy.y) < burnRange) {
-                enemy.hp -= 50; // 즉시 큰 피해
+                enemy.hp -= 50;
                 if (enemy.hp <= 0) {
                     killCount++;
                     const dropType = Math.random() < 0.05 ? 'hp' : 'xp';
@@ -124,7 +122,6 @@ class Player {
             }
         });
         enemies = enemies.filter(e => !e.dead);
-        // 화염 효과 파티클 (시각적 피드백)
         this.showBurnEffect = true;
         setTimeout(() => this.showBurnEffect = false, 500);
     }
@@ -132,7 +129,7 @@ class Player {
     takeDamage(amount) {
         if (this.shieldActive) {
             this.shieldActive = false;
-            return; // 피해 무시
+            return;
         }
         const reducedDamage = amount * (1 - this.armor);
         this.hp -= reducedDamage;
@@ -140,7 +137,6 @@ class Player {
     }
 
     draw() {
-        // 화염 오오라 효과
         if (this.showBurnEffect) {
             ctx.beginPath();
             ctx.arc(this.x, this.y, 150, 0, Math.PI * 2);
@@ -149,7 +145,6 @@ class Player {
             ctx.closePath();
         }
 
-        // 플레이어 캐릭터
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fillStyle = '#3498db';
@@ -159,7 +154,6 @@ class Player {
         ctx.stroke();
         ctx.closePath();
 
-        // 실드 시각 효과
         if (this.shieldActive) {
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radius + 5, 0, Math.PI * 2);
@@ -169,7 +163,6 @@ class Player {
             ctx.closePath();
         }
 
-        // 발 밑 HP 바
         const barWidth = 40;
         const barHeight = 6;
         ctx.fillStyle = '#444';
@@ -310,7 +303,6 @@ function update(time) {
 
     player.update(dt);
 
-    // 무기 업데이트
     const arrowWeapon = player.weapons.find(w => w.type === 'arrow');
     if (arrowWeapon) {
         arrowWeapon.timer += dt;
@@ -350,7 +342,7 @@ function update(time) {
         drop.update(player);
         if (getDist(player.x, player.y, drop.x, drop.y) < player.radius + 10) {
             if (drop.type === 'xp') {
-                xp += 25;
+                xp += 15; // 획득 경험치 하향 (25 -> 15)
                 if (xp >= nextXp) levelUp();
             } else if (drop.type === 'hp') {
                 player.hp = Math.min(player.maxHp, player.hp + 20);
@@ -386,9 +378,11 @@ function render() {
 
     const swordWeapon = player.weapons.find(w => w.type === 'sword');
     if (swordWeapon) {
-        const speed = 4 + swordWeapon.level * 0.8;
+        // 속도와 개수를 각각의 레벨에서 가져옴
+        const speed = 3 + swordWeapon.speedLevel * 1.5; 
         const angle = (performance.now() / 1000) * speed;
-        const count = Math.floor(swordWeapon.level / 2) + 1;
+        const count = swordWeapon.countLevel;
+        
         for(let i=0; i<count; i++) {
             const orbitAngle = angle + (Math.PI * 2 / count) * i;
             const sx = player.x + Math.cos(orbitAngle) * 60;
@@ -426,7 +420,7 @@ function levelUp() {
     isPlaying = false;
     xp = 0;
     level++;
-    nextXp = Math.floor(nextXp * 1.3);
+    nextXp = Math.floor(nextXp * 1.35); // 레벨업 필요 경험치 증가폭 상향
     const overlay = document.getElementById('levelup-overlay');
     const list = document.getElementById('upgrade-list');
     list.innerHTML = '';
@@ -448,33 +442,34 @@ function levelUp() {
 
 function applyUpgrade(up) {
     if (up.id === 'hp_max') { player.maxHp += 20; player.hp += 20; }
-    if (up.id === 'move_speed') player.speed *= 1.02; // 2%씩 증가
+    if (up.id === 'move_speed') player.speed *= 1.02;
     if (up.id === 'magnet_range') player.magnetRange += 40;
-    if (up.id === 'armor') player.armor += 0.02; // 2% 피해 감소
+    if (up.id === 'armor') player.armor += 0.02;
     if (up.id === 'shield') {
         player.hasShield = true;
         player.shieldActive = true;
-        player.shieldMaxCooldown = Math.max(3000, player.shieldMaxCooldown - 1000); // 쿨타임 감소
+        player.shieldMaxCooldown = Math.max(3000, player.shieldMaxCooldown - 1000);
     }
     if (up.id === 'burn') {
         player.hasBurn = true;
-        player.burnMaxCooldown = Math.max(1000, player.burnMaxCooldown - 300); // 쿨타임 감소
+        player.burnMaxCooldown = Math.max(1000, player.burnMaxCooldown - 300);
     }
-    if (up.id === 'sword_speed' || up.id === 'sword_count') {
-        const w = player.weapons.find(w => w.type === 'sword');
-        if (w) w.level++;
+    const swordW = player.weapons.find(w => w.type === 'sword');
+    if (up.id === 'sword_speed') {
+        if (swordW) swordW.speedLevel++;
+    }
+    if (up.id === 'sword_count') {
+        if (swordW) swordW.countLevel++;
     }
     if (up.id === 'sword_dmg') {
-        const w = player.weapons.find(w => w.type === 'sword');
-        if (w) w.damage *= 1.2;
+        if (swordW) swordW.damage *= 1.3;
     }
+    const arrowW = player.weapons.find(w => w.type === 'arrow');
     if (up.id === 'arrow_dmg') {
-        const w = player.weapons.find(w => w.type === 'arrow');
-        if (w) w.damage += 15;
+        if (arrowW) { arrowW.level++; arrowW.damage += 15; }
     }
     if (up.id === 'arrow_count') {
-        const w = player.weapons.find(w => w.type === 'arrow');
-        if (w) w.count++;
+        if (arrowW) arrowW.count++;
     }
 }
 
@@ -493,7 +488,7 @@ function init() {
     killCount = 0;
     level = 1;
     xp = 0;
-    nextXp = 100;
+    nextXp = 200;
     updateHUD();
     requestAnimationFrame(update);
 }
