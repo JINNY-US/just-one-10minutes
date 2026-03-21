@@ -38,6 +38,10 @@ const UPGRADES = [
 // 게임 객체 클래스
 class Player {
     constructor() {
+        this.init();
+    }
+
+    init() {
         this.x = GAME_WIDTH / 2;
         this.y = GAME_HEIGHT / 2;
         this.radius = 15;
@@ -53,7 +57,6 @@ class Player {
 
     update() {
         let dx = 0, dy = 0;
-        // WASD 이동 우선
         if (keys['KeyW']) dy -= 1;
         if (keys['KeyS']) dy += 1;
         if (keys['KeyA']) dx -= 1;
@@ -67,7 +70,6 @@ class Player {
         this.x += dx * this.speed;
         this.y += dy * this.speed;
 
-        // 맵 랩핑
         if (this.x < 0) this.x = GAME_WIDTH;
         if (this.x > GAME_WIDTH) this.x = 0;
         if (this.y < 0) this.y = GAME_HEIGHT;
@@ -75,7 +77,6 @@ class Player {
     }
 
     draw() {
-        // 플레이어 캐릭터
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fillStyle = '#3498db';
@@ -85,7 +86,6 @@ class Player {
         ctx.stroke();
         ctx.closePath();
 
-        // 발 밑 HP 바
         const barWidth = 40;
         const barHeight = 6;
         ctx.fillStyle = '#444';
@@ -193,7 +193,7 @@ let projectiles = [];
 let drops = [];
 
 function spawnEnemy() {
-    if (enemies.length > 60) return;
+    if (!isPlaying || enemies.length > 60) return;
     let x, y;
     if (Math.random() < 0.5) {
         x = Math.random() < 0.5 ? -20 : GAME_WIDTH + 20;
@@ -210,14 +210,17 @@ function spawnEnemy() {
 }
 
 function update(time) {
-    if (!isPlaying) return;
+    if (!isPlaying) {
+        lastTime = time;
+        requestAnimationFrame(update);
+        return;
+    }
     const dt = time - lastTime;
     lastTime = time;
     gameTime += dt / 1000;
 
     player.update();
 
-    // 무기 업데이트
     const arrowWeapon = player.weapons.find(w => w.type === 'arrow');
     if (arrowWeapon) {
         arrowWeapon.timer += dt;
@@ -249,8 +252,8 @@ function update(time) {
         });
     });
 
-    projectiles = projectiles.filter(p => p.life > 0);
     projectiles.forEach(p => p.update());
+    projectiles = projectiles.filter(p => p.life > 0);
 
     drops.forEach((drop, dIdx) => {
         drop.update(player);
@@ -344,7 +347,6 @@ function levelUp() {
             overlay.classList.add('hidden');
             isPlaying = true;
             lastTime = performance.now();
-            requestAnimationFrame(update);
         };
         list.appendChild(div);
     });
@@ -369,21 +371,32 @@ function startGame() {
     document.getElementById('start-overlay').style.display = 'none';
     isPlaying = true;
     lastTime = performance.now();
+}
+
+function init() {
+    player = new Player();
+    enemies = [];
+    projectiles = [];
+    drops = [];
+    gameTime = 0;
+    killCount = 0;
+    level = 1;
+    xp = 0;
+    nextXp = 100;
+    
+    updateHUD();
     requestAnimationFrame(update);
 }
 
-function resetGame() { location.reload(); }
-
 document.getElementById('start-btn').onclick = startGame;
-document.getElementById('reset-btn').onclick = resetGame;
+document.getElementById('reset-btn').onclick = () => location.reload();
 
 function gameOver() {
-    if (!isPlaying) return; // 이미 게임 오버 처리 중이면 무시
+    if (!isPlaying) return;
     isPlaying = false;
     const finalScore = Math.floor(gameTime) + killCount;
     alert(`게임 오버! 최종 점수: ${finalScore}점 (생존: ${Math.floor(gameTime)}초, 처치: ${killCount}마리)`);
     location.reload();
 }
 
-updateHUD();
-render();
+init();

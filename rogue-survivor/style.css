@@ -71,7 +71,8 @@ body.dark .score-board {
 .controls {
     display: flex;
     justify-content: center;
-    gap: 10px;
+    gap: 30px; /* 간격을 10px에서 30px로 확대 */
+    margin-top: 20px;
 }
 
 /* 모달 및 오버레이 */
