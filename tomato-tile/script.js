@@ -104,6 +104,10 @@ const boardWrapper = document.querySelector('.board-wrapper');
 
 function handleStart(e) {
     if (!isGameActive) return;
+    
+    // 마우스 왼쪽 버튼 클릭만 허용 (터치 이벤트는 제외)
+    if (e.type === 'mousedown' && e.button !== 0) return;
+
     isDragging = true;
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
@@ -117,10 +121,17 @@ function handleStart(e) {
     selectionBox.style.width = '0px';
     selectionBox.style.height = '0px';
     selectionBox.classList.remove('hidden');
+
+    // 터치 이벤트인 경우 브라우저 기본 동작(스크롤 등) 방지
+    if (e.type === 'touchstart') {
+        // Passive: false가 설정되어 있어야 작동함
+        if (e.cancelable) e.preventDefault();
+    }
 }
 
 function handleMove(e) {
     if (!isDragging) return;
+    
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
@@ -138,25 +149,29 @@ function handleMove(e) {
     selectionBox.style.width = width + 'px';
     selectionBox.style.height = height + 'px';
     
-    if (e.touches) e.preventDefault();
+    // 드래그 중 스크롤 방지
+    if (e.cancelable) e.preventDefault();
 }
 
-function handleEnd() {
+function handleEnd(e) {
     if (!isDragging) return;
     isDragging = false;
     
     // 박스가 사라지기 전에 영역 내 타일 체크
     checkSelection();
     selectionBox.classList.add('hidden');
+    
+    if (e.cancelable && e.type === 'touchend') e.preventDefault();
 }
 
+// 이벤트 등록 (Passive: false를 통해 preventDefault 가능하게 설정)
 boardWrapper.addEventListener('mousedown', handleStart);
-window.addEventListener('mousemove', handleMove);
+window.addEventListener('mousemove', handleMove, { passive: false });
 window.addEventListener('mouseup', handleEnd);
 
 boardWrapper.addEventListener('touchstart', handleStart, { passive: false });
 window.addEventListener('touchmove', handleMove, { passive: false });
-window.addEventListener('touchend', handleEnd);
+window.addEventListener('touchend', handleEnd, { passive: false });
 
 // 선택된 영역 확인
 function checkSelection() {

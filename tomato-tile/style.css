@@ -1,3 +1,8 @@
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
 :root {
     --tomato-color: #ff5252;
     --bg-color: #fff9f9;
@@ -25,14 +30,21 @@ body.dark {
 /* 모바일 대응 */
 @media (max-width: 768px) {
     :root {
-        --tile-size: 24px;
+        --tile-size: 26px;
         --tile-gap: 3px;
     }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 500px) {
     :root {
-        --tile-size: 18px;
+        --tile-size: 20px;
+        --tile-gap: 2px;
+    }
+}
+
+@media (max-width: 380px) {
+    :root {
+        --tile-size: 17px;
         --tile-gap: 2px;
     }
 }
@@ -49,7 +61,7 @@ body {
     color: var(--text-color);
     font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
     user-select: none;
-    overflow-x: hidden;
+    overflow: hidden; /* 모바일에서 전체 스크롤 방지 */
     transition: background-color 0.3s, color 0.3s;
 }
 
