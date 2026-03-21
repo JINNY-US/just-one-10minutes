@@ -1,7 +1,6 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// 게임 설정
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 800;
 canvas.width = GAME_WIDTH;
@@ -12,35 +11,28 @@ let gameTime = 0;
 let killCount = 0;
 let level = 1;
 let xp = 0;
-let nextXp = 200; // 초기 필요 경험치 상향 (100 -> 200)
+let nextXp = 200;
 let lastTime = 0;
 
-// 입력 관리
 const keys = {};
 window.addEventListener('keydown', e => keys[e.code] = true);
 window.addEventListener('keyup', e => keys[e.code] = false);
 
-// 유틸리티 함수
 function getDist(x1, y1, x2, y2) {
     return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
 }
 
-// 스킬 강화 데이터
-const UPGRADES = [
-    { id: 'sword_speed', name: '칼날 회전 강화', desc: '회전 칼날의 속도가 빨라집니다.', type: 'stat' },
-    { id: 'sword_count', name: '칼날 개수 추가', desc: '회전하는 칼날이 하나 더 생깁니다.', type: 'weapon' },
-    { id: 'sword_dmg', name: '칼날 예리함 강화', desc: '칼날의 공격력이 20% 증가합니다.', type: 'stat' },
-    { id: 'arrow_dmg', name: '추적 화살 강화', desc: '화살의 공격력이 강해집니다.', type: 'stat' },
-    { id: 'arrow_count', name: '멀티 샷', desc: '한 번에 발사하는 화살 개수가 늘어납니다.', type: 'weapon' },
-    { id: 'hp_max', name: '최대 체력 증가', desc: '최대 체력이 20 증가합니다.', type: 'stat' },
-    { id: 'move_speed', name: '가벼운 발걸음', desc: '이동 속도가 2% 증가합니다.', type: 'stat' },
-    { id: 'armor', name: '강철 갑옷', desc: '받는 피해량이 2% 감소합니다.', type: 'stat' },
-    { id: 'shield', name: '에너지 실드', desc: '10초마다 피해를 1회 막아주는 보호막을 얻습니다.', type: 'skill' },
-    { id: 'burn', name: '화염 오오라', desc: '3초마다 주변 적들을 불태웁니다.', type: 'skill' },
-    { id: 'magnet_range', name: '자성 강화', desc: '경험치를 끌어오는 범위가 넓어집니다.', type: 'stat' }
-];
+// 스킬 설정 데이터
+const SKILL_CONFIG = {
+    sword: { name: '칼날', icon: '⚔️', desc: '회전하는 칼날을 추가하고 속도를 강화합니다.' },
+    arrow: { name: '화살', icon: '🏹', desc: '가까운 적을 추적하는 화살을 발사합니다.' },
+    fire: { name: '화염', icon: '🔥', desc: '주변 적들을 주기적으로 불태웁니다.' },
+    speed: { name: '이속', icon: '👟', desc: '이동 속도가 2%씩 영구적으로 증가합니다.' },
+    hp: { name: '체력', icon: '❤️', desc: '최대 체력이 20씩 증가합니다.' },
+    armor: { name: '갑옷', icon: '🛡️', desc: '받는 피해가 2%씩 감소합니다.' },
+    shield: { name: '실드', icon: '💠', desc: '피해를 막아주는 실드 재생 속도가 빨라집니다.' }
+};
 
-// 게임 객체 클래스
 class Player {
     constructor() {
         this.init();
@@ -50,25 +42,31 @@ class Player {
         this.x = GAME_WIDTH / 2;
         this.y = GAME_HEIGHT / 2;
         this.radius = 15;
-        this.speed = 3;
+        this.baseSpeed = 3;
         this.hp = 100;
         this.maxHp = 100;
         this.magnetRange = 100;
-        this.armor = 0;
         
-        this.hasShield = false;
+        // 스킬 레벨 관리
+        this.skillLevels = {
+            sword: 1, arrow: 1, fire: 0, speed: 0, hp: 0, armor: 0, shield: 0
+        };
+
+        // 전투 상태 변수
         this.shieldActive = false;
         this.shieldTimer = 0;
-        this.shieldMaxCooldown = 10000;
-
-        this.hasBurn = false;
         this.burnTimer = 0;
-        this.burnMaxCooldown = 3000;
+        this.arrowTimer = 0;
         
-        this.weapons = [
-            { type: 'sword', speedLevel: 1, countLevel: 1, damage: 0.5 },
-            { type: 'arrow', level: 1, timer: 0, damage: 30, count: 1 }
-        ];
+        this.showBurnEffect = false;
+    }
+
+    get speed() {
+        return this.baseSpeed * (1 + (this.skillLevels.speed * 0.02));
+    }
+
+    get armor() {
+        return this.skillLevels.armor * 0.02;
     }
 
     update(dt) {
@@ -91,39 +89,53 @@ class Player {
         if (this.y < 0) this.y = GAME_HEIGHT;
         if (this.y > GAME_HEIGHT) this.y = 0;
 
-        if (this.hasShield && !this.shieldActive) {
-            this.shieldTimer += dt;
-            if (this.shieldTimer >= this.shieldMaxCooldown) {
-                this.shieldActive = true;
-                this.shieldTimer = 0;
+        // 실드 시스템 (Lv 1부터 작동)
+        if (this.skillLevels.shield > 0) {
+            if (!this.shieldActive) {
+                this.shieldTimer += dt;
+                const cooldown = Math.max(2000, 11000 - (this.skillLevels.shield * 1000));
+                if (this.shieldTimer >= cooldown) {
+                    this.shieldActive = true;
+                    this.shieldTimer = 0;
+                }
             }
         }
 
-        if (this.hasBurn) {
+        // 화염 오오라 시스템
+        if (this.skillLevels.fire > 0) {
             this.burnTimer += dt;
-            if (this.burnTimer >= this.burnMaxCooldown) {
+            const cooldown = Math.max(1000, 3300 - (this.skillLevels.fire * 300));
+            if (this.burnTimer >= cooldown) {
                 this.activateBurn();
                 this.burnTimer = 0;
+            }
+        }
+
+        // 화살 시스템
+        if (this.skillLevels.arrow > 0) {
+            this.arrowTimer += dt;
+            if (this.arrowTimer >= 1200) {
+                const count = this.skillLevels.arrow; // 레벨당 1발
+                const targets = findNearestEnemies(count);
+                targets.forEach(t => {
+                    projectiles.push(new Projectile(this.x, this.y, t.x, t.y, 30 + (this.skillLevels.arrow * 5)));
+                });
+                this.arrowTimer = 0;
             }
         }
     }
 
     activateBurn() {
-        const burnRange = 150;
-        enemies.forEach(enemy => {
-            if (getDist(this.x, this.y, enemy.x, enemy.y) < burnRange) {
-                enemy.hp -= 50;
-                if (enemy.hp <= 0) {
-                    killCount++;
-                    const dropType = Math.random() < 0.05 ? 'hp' : 'xp';
-                    drops.push(new Drop(enemy.x, enemy.y, dropType));
-                    enemy.dead = true;
-                }
+        const range = 120 + (this.skillLevels.fire * 15);
+        const dmg = 30 + (this.skillLevels.fire * 10);
+        enemies.forEach(e => {
+            if (getDist(this.x, this.y, e.x, e.y) < range) {
+                e.hp -= dmg;
+                if (e.hp <= 0) e.kill();
             }
         });
-        enemies = enemies.filter(e => !e.dead);
         this.showBurnEffect = true;
-        setTimeout(() => this.showBurnEffect = false, 500);
+        setTimeout(() => this.showBurnEffect = false, 400);
     }
 
     takeDamage(amount) {
@@ -131,16 +143,16 @@ class Player {
             this.shieldActive = false;
             return;
         }
-        const reducedDamage = amount * (1 - this.armor);
-        this.hp -= reducedDamage;
+        this.hp -= amount * (1 - this.armor);
         if (this.hp <= 0) gameOver();
     }
 
     draw() {
         if (this.showBurnEffect) {
+            const range = 120 + (this.skillLevels.fire * 15);
             ctx.beginPath();
-            ctx.arc(this.x, this.y, 150, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255, 69, 0, 0.2)';
+            ctx.arc(this.x, this.y, range, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 87, 34, 0.2)';
             ctx.fill();
             ctx.closePath();
         }
@@ -156,19 +168,18 @@ class Player {
 
         if (this.shieldActive) {
             ctx.beginPath();
-            ctx.arc(this.x, this.y, this.radius + 5, 0, Math.PI * 2);
-            ctx.strokeStyle = '#00f2ff';
+            ctx.arc(this.x, this.y, this.radius + 6, 0, Math.PI * 2);
+            ctx.strokeStyle = '#00e5ff';
             ctx.lineWidth = 3;
             ctx.stroke();
             ctx.closePath();
         }
 
-        const barWidth = 40;
-        const barHeight = 6;
+        const barW = 40;
         ctx.fillStyle = '#444';
-        ctx.fillRect(this.x - barWidth / 2, this.y + this.radius + 10, barWidth, barHeight);
+        ctx.fillRect(this.x - barW/2, this.y + this.radius + 10, barW, 6);
         ctx.fillStyle = '#ff5252';
-        ctx.fillRect(this.x - barWidth / 2, this.y + this.radius + 10, (this.hp / this.maxHp) * barWidth, barHeight);
+        ctx.fillRect(this.x - barW/2, this.y + this.radius + 10, (this.hp / this.maxHp) * barW, 6);
     }
 }
 
@@ -178,10 +189,10 @@ class Enemy {
         this.y = y;
         this.type = type;
         this.radius = type === 'boss' ? 40 : 12;
-        this.hp = type === 'boss' ? 1000 : 20 + (gameTime / 5);
+        this.hp = type === 'boss' ? 1500 : 25 + (gameTime / 4);
         this.maxHp = this.hp;
-        const baseSpeed = type === 'boss' ? 1.2 : 0.6 + Math.random() * 0.5;
-        this.speed = Math.min(2.5, baseSpeed + (gameTime / 120)); 
+        const baseSpeed = type === 'boss' ? 1.2 : 0.7 + Math.random() * 0.5;
+        this.speed = Math.min(2.5, baseSpeed + (gameTime / 150)); 
         this.color = type === 'boss' ? '#e74c3c' : '#95a5a6';
         this.dead = false;
     }
@@ -190,6 +201,14 @@ class Enemy {
         const angle = Math.atan2(player.y - this.y, player.x - this.x);
         this.x += Math.cos(angle) * this.speed;
         this.y += Math.sin(angle) * this.speed;
+    }
+
+    kill() {
+        if (this.dead) return;
+        this.dead = true;
+        killCount++;
+        const dropType = Math.random() < 0.06 ? 'hp' : 'xp';
+        drops.push(new Drop(this.x, this.y, dropType));
     }
 
     draw() {
@@ -208,30 +227,24 @@ class Enemy {
 }
 
 class Projectile {
-    constructor(x, y, targetX, targetY, damage) {
-        this.x = x;
-        this.y = y;
-        const angle = Math.atan2(targetY - y, targetX - x);
-        this.vx = Math.cos(angle) * 7;
-        this.vy = Math.sin(angle) * 7;
-        this.radius = 5;
-        this.damage = damage;
-        this.life = 100;
+    constructor(x, y, tx, ty, dmg) {
+        this.x = x; this.y = y;
+        const angle = Math.atan2(ty - y, tx - x);
+        this.vx = Math.cos(angle) * 8;
+        this.vy = Math.sin(angle) * 8;
+        this.damage = dmg;
+        this.life = 120;
     }
-
     update() {
-        this.x += this.vx;
-        this.y += this.vy;
-        this.life--;
+        this.x += this.vx; this.y += this.vy; this.life--;
         if (this.x < 0) this.x = GAME_WIDTH;
         if (this.x > GAME_WIDTH) this.x = 0;
         if (this.y < 0) this.y = GAME_HEIGHT;
         if (this.y > GAME_HEIGHT) this.y = 0;
     }
-
     draw() {
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y, 5, 0, Math.PI * 2);
         ctx.fillStyle = '#f1c40f';
         ctx.fill();
         ctx.closePath();
@@ -239,32 +252,26 @@ class Projectile {
 }
 
 class Drop {
-    constructor(x, y, type = 'xp') {
-        this.x = x;
-        this.y = y;
-        this.type = type;
-        this.radius = type === 'hp' ? 6 : 4;
-        this.isBeingPulled = false;
+    constructor(x, y, type) {
+        this.x = x; this.y = y; this.type = type;
+        this.radius = type === 'hp' ? 7 : 4;
+        this.pulled = false;
     }
-
     update(player) {
         const dist = getDist(this.x, this.y, player.x, player.y);
-        if (dist < player.magnetRange) this.isBeingPulled = true;
-        if (this.isBeingPulled) {
+        if (dist < player.magnetRange) this.pulled = true;
+        if (this.pulled) {
             const angle = Math.atan2(player.y - this.y, player.x - this.x);
-            this.x += Math.cos(angle) * 8;
-            this.y += Math.sin(angle) * 8;
+            this.x += Math.cos(angle) * 10;
+            this.y += Math.sin(angle) * 10;
         }
     }
-
     draw() {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fillStyle = this.type === 'xp' ? '#2ecc71' : '#ff5252';
         ctx.fill();
-        ctx.strokeStyle = 'white';
-        ctx.lineWidth = 1;
-        ctx.stroke();
+        ctx.strokeStyle = 'white'; ctx.lineWidth = 1; ctx.stroke();
         ctx.closePath();
     }
 }
@@ -275,14 +282,14 @@ let projectiles = [];
 let drops = [];
 
 function spawnEnemy() {
-    if (!isPlaying || enemies.length > 60) return;
+    if (!isPlaying || enemies.length > 70) return;
     let x, y;
     if (Math.random() < 0.5) {
-        x = Math.random() < 0.5 ? -20 : GAME_WIDTH + 20;
+        x = Math.random() < 0.5 ? -30 : GAME_WIDTH + 30;
         y = Math.random() * GAME_HEIGHT;
     } else {
         x = Math.random() * GAME_WIDTH;
-        y = Math.random() < 0.5 ? -20 : GAME_HEIGHT + 20;
+        y = Math.random() < 0.5 ? -30 : GAME_HEIGHT + 30;
     }
     if (killCount > 0 && killCount % 100 === 0 && !enemies.find(e => e.type === 'boss')) {
         enemies.push(new Enemy(x, y, 'boss'));
@@ -292,44 +299,23 @@ function spawnEnemy() {
 }
 
 function update(time) {
-    if (!isPlaying) {
-        lastTime = time;
-        requestAnimationFrame(update);
-        return;
-    }
+    if (!isPlaying) { lastTime = time; requestAnimationFrame(update); return; }
     const dt = time - lastTime;
     lastTime = time;
     gameTime += dt / 1000;
 
     player.update(dt);
 
-    const arrowWeapon = player.weapons.find(w => w.type === 'arrow');
-    if (arrowWeapon) {
-        arrowWeapon.timer += dt;
-        if (arrowWeapon.timer > 1200) {
-            const nearestEnemies = findNearestEnemies(arrowWeapon.count);
-            nearestEnemies.forEach(target => {
-                projectiles.push(new Projectile(player.x, player.y, target.x, target.y, arrowWeapon.damage));
-            });
-            arrowWeapon.timer = 0;
-        }
-    }
-
-    enemies.forEach((enemy, eIdx) => {
-        enemy.update(player);
-        if (getDist(player.x, player.y, enemy.x, enemy.y) < player.radius + enemy.radius) {
-            player.takeDamage(0.3);
+    enemies.forEach(e => {
+        e.update(player);
+        if (getDist(player.x, player.y, e.x, e.y) < player.radius + e.radius) {
+            player.takeDamage(0.4);
         }
         projectiles.forEach((p, pIdx) => {
-            if (getDist(p.x, p.y, enemy.x, enemy.y) < p.radius + enemy.radius) {
-                enemy.hp -= p.damage;
+            if (getDist(p.x, p.y, e.x, e.y) < 5 + e.radius) {
+                e.hp -= p.damage;
                 projectiles.splice(pIdx, 1);
-                if (enemy.hp <= 0) {
-                    killCount++;
-                    const dropType = Math.random() < 0.05 ? 'hp' : 'xp';
-                    drops.push(new Drop(enemy.x, enemy.y, dropType));
-                    enemy.dead = true;
-                }
+                if (e.hp <= 0) e.kill();
             }
         });
     });
@@ -338,13 +324,13 @@ function update(time) {
     projectiles.forEach(p => p.update());
     projectiles = projectiles.filter(p => p.life > 0);
 
-    drops.forEach((drop, dIdx) => {
-        drop.update(player);
-        if (getDist(player.x, player.y, drop.x, drop.y) < player.radius + 10) {
-            if (drop.type === 'xp') {
-                xp += 15; // 획득 경험치 하향 (25 -> 15)
+    drops.forEach((d, dIdx) => {
+        d.update(player);
+        if (getDist(player.x, player.y, d.x, d.y) < player.radius + 10) {
+            if (d.type === 'xp') {
+                xp += 15;
                 if (xp >= nextXp) levelUp();
-            } else if (drop.type === 'hp') {
+            } else {
                 player.hp = Math.min(player.maxHp, player.hp + 20);
             }
             drops.splice(dIdx, 1);
@@ -359,9 +345,7 @@ function update(time) {
 }
 
 function findNearestEnemies(n) {
-    return [...enemies]
-        .sort((a, b) => getDist(player.x, player.y, a.x, a.y) - getDist(player.x, player.y, b.x, b.y))
-        .slice(0, n);
+    return [...enemies].sort((a, b) => getDist(player.x, player.y, a.x, a.y) - getDist(player.x, player.y, b.x, b.y)).slice(0, n);
 }
 
 function render() {
@@ -376,61 +360,74 @@ function render() {
     projectiles.forEach(p => p.draw());
     player.draw();
 
-    const swordWeapon = player.weapons.find(w => w.type === 'sword');
-    if (swordWeapon) {
-        // 속도와 개수를 각각의 레벨에서 가져옴
-        const speed = 3 + swordWeapon.speedLevel * 1.5; 
+    if (player.skillLevels.sword > 0) {
+        const speed = 2.5 + (player.skillLevels.sword * 1.2);
         const angle = (performance.now() / 1000) * speed;
-        const count = swordWeapon.countLevel;
-        
+        const count = player.skillLevels.sword;
+        const dmg = 0.5 + (player.skillLevels.sword * 0.2);
         for(let i=0; i<count; i++) {
-            const orbitAngle = angle + (Math.PI * 2 / count) * i;
-            const sx = player.x + Math.cos(orbitAngle) * 60;
-            const sy = player.y + Math.sin(orbitAngle) * 60;
+            const orbit = angle + (Math.PI * 2 / count) * i;
+            const sx = player.x + Math.cos(orbit) * 70;
+            const sy = player.y + Math.sin(orbit) * 70;
             ctx.save();
             ctx.translate(player.x, player.y);
-            ctx.rotate(orbitAngle);
+            ctx.rotate(orbit);
             ctx.fillStyle = 'rgba(241, 196, 15, 0.8)';
-            ctx.fillRect(50, -4, 25, 8);
+            ctx.fillRect(60, -4, 25, 8);
             ctx.restore();
-            enemies.forEach((enemy) => {
-                if (getDist(sx, sy, enemy.x, enemy.y) < 20 + enemy.radius) {
-                    enemy.hp -= swordWeapon.damage;
-                    if (enemy.hp <= 0) {
-                        killCount++;
-                        const dropType = Math.random() < 0.05 ? 'hp' : 'xp';
-                        drops.push(new Drop(enemy.x, enemy.y, dropType));
-                        enemy.dead = true;
-                    }
+            enemies.forEach(e => {
+                if (getDist(sx, sy, e.x, e.y) < 20 + e.radius) {
+                    e.hp -= dmg;
+                    if (e.hp <= 0) e.kill();
                 }
             });
         }
-        enemies = enemies.filter(e => !e.dead);
     }
 }
 
 function updateHUD() {
     document.getElementById('xp-bar').style.width = `${(xp / nextXp) * 100}%`;
     document.getElementById('level-display').textContent = `LEVEL ${level}`;
-    const score = Math.floor(gameTime) + killCount;
-    document.getElementById('score-val').textContent = score;
+    document.getElementById('score-val').textContent = Math.floor(gameTime) + killCount;
+    
+    // 스킬 아이콘 업데이트
+    const container = document.getElementById('skill-icons');
+    container.innerHTML = '';
+    for (const [key, lv] of Object.entries(player.skillLevels)) {
+        if (lv > 0) {
+            const slot = document.createElement('div');
+            slot.className = 'skill-slot';
+            slot.innerHTML = `${SKILL_CONFIG[key].icon}<span class="skill-level">${lv}</span>`;
+            container.appendChild(slot);
+        }
+    }
 }
 
 function levelUp() {
     isPlaying = false;
     xp = 0;
     level++;
-    nextXp = Math.floor(nextXp * 1.35); // 레벨업 필요 경험치 증가폭 상향
+    nextXp = Math.floor(nextXp * 1.3);
     const overlay = document.getElementById('levelup-overlay');
     const list = document.getElementById('upgrade-list');
     list.innerHTML = '';
-    const shuffled = [...UPGRADES].sort(() => 0.5 - Math.random()).slice(0, 3);
-    shuffled.forEach(up => {
+    
+    // 모든 스킬 중 랜덤 3개 선택
+    const skillKeys = Object.keys(SKILL_CONFIG);
+    const shuffled = skillKeys.sort(() => 0.5 - Math.random()).slice(0, 3);
+    
+    shuffled.forEach(key => {
+        const skill = SKILL_CONFIG[key];
+        const currentLv = player.skillLevels[key];
         const div = document.createElement('div');
         div.className = 'upgrade-item';
-        div.innerHTML = `<span class="item-name">${up.name}</span><span class="item-desc">${up.desc}</span>`;
+        div.innerHTML = `
+            <span class="item-name">${skill.icon} ${skill.name} (Lv.${currentLv} → ${currentLv + 1})</span>
+            <span class="item-desc">${skill.desc}</span>
+        `;
         div.onclick = () => {
-            applyUpgrade(up);
+            player.skillLevels[key]++;
+            if (key === 'hp') { player.maxHp += 20; player.hp += 20; }
             overlay.classList.add('hidden');
             isPlaying = true;
             lastTime = performance.now();
@@ -438,39 +435,6 @@ function levelUp() {
         list.appendChild(div);
     });
     overlay.classList.remove('hidden');
-}
-
-function applyUpgrade(up) {
-    if (up.id === 'hp_max') { player.maxHp += 20; player.hp += 20; }
-    if (up.id === 'move_speed') player.speed *= 1.02;
-    if (up.id === 'magnet_range') player.magnetRange += 40;
-    if (up.id === 'armor') player.armor += 0.02;
-    if (up.id === 'shield') {
-        player.hasShield = true;
-        player.shieldActive = true;
-        player.shieldMaxCooldown = Math.max(3000, player.shieldMaxCooldown - 1000);
-    }
-    if (up.id === 'burn') {
-        player.hasBurn = true;
-        player.burnMaxCooldown = Math.max(1000, player.burnMaxCooldown - 300);
-    }
-    const swordW = player.weapons.find(w => w.type === 'sword');
-    if (up.id === 'sword_speed') {
-        if (swordW) swordW.speedLevel++;
-    }
-    if (up.id === 'sword_count') {
-        if (swordW) swordW.countLevel++;
-    }
-    if (up.id === 'sword_dmg') {
-        if (swordW) swordW.damage *= 1.3;
-    }
-    const arrowW = player.weapons.find(w => w.type === 'arrow');
-    if (up.id === 'arrow_dmg') {
-        if (arrowW) { arrowW.level++; arrowW.damage += 15; }
-    }
-    if (up.id === 'arrow_count') {
-        if (arrowW) arrowW.count++;
-    }
 }
 
 function startGame() {
@@ -481,14 +445,8 @@ function startGame() {
 
 function init() {
     player = new Player();
-    enemies = [];
-    projectiles = [];
-    drops = [];
-    gameTime = 0;
-    killCount = 0;
-    level = 1;
-    xp = 0;
-    nextXp = 200;
+    enemies = []; projectiles = []; drops = [];
+    gameTime = 0; killCount = 0; level = 1; xp = 0; nextXp = 200;
     updateHUD();
     requestAnimationFrame(update);
 }
