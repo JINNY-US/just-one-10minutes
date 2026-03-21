@@ -6,8 +6,8 @@
 #canvas-wrapper {
     position: relative;
     width: 100%;
-    background: #000;
-    border-radius: 12px;
+    background: #1a1a1a;
+    border-radius: 8px;
     overflow: hidden;
     aspect-ratio: 1 / 1;
     margin: 10px 0;
@@ -22,60 +22,17 @@ canvas {
 
 /* HUD 스타일 */
 .hud {
-    background: var(--board-bg-light);
-    padding: 12px;
-    border-radius: 12px;
     margin-bottom: 10px;
-    transition: background 0.3s;
 }
 
-body.dark .hud {
-    background: var(--board-bg-dark);
-}
-
-.hud-top, .hud-bottom {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-}
-
-.hp-bar-container {
-    flex: 1;
-    height: 20px;
-    background: #444;
-    border-radius: 10px;
+.xp-bar-container.square {
+    width: 100%;
+    height: 24px;
+    background: #333;
     position: relative;
+    border-radius: 0; /* 네모 모양 */
     overflow: hidden;
-    margin-right: 15px;
-}
-
-.hp-bar {
-    height: 100%;
-    width: 100%;
-    background: linear-gradient(90deg, #ff5252, #ff1744);
-    transition: width 0.3s ease;
-}
-
-#hp-text {
-    position: absolute;
-    width: 100%;
-    text-align: center;
-    font-size: 0.75rem;
-    font-weight: 900;
-    color: white;
-    top: 50%;
-    transform: translateY(-50%);
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-}
-
-.xp-bar-container {
-    width: 100%;
-    height: 6px;
-    background: #222;
-    border-radius: 3px;
-    margin-bottom: 8px;
-    overflow: hidden;
+    border: 2px solid #444;
 }
 
 .xp-bar {
@@ -85,15 +42,37 @@ body.dark .hud {
     transition: width 0.2s ease;
 }
 
-.timer-display {
-    font-family: monospace;
+#level-display {
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.85rem;
     font-weight: 900;
-    font-size: 1.1rem;
-    color: var(--primary-color);
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
 }
 
-.stats { font-size: 0.85rem; font-weight: 700; }
-.gold-display { font-weight: 900; color: #f1c40f; }
+/* 점수판 */
+.score-board {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 10px 0 20px;
+    padding: 10px;
+    background: var(--board-bg-light);
+    border-radius: 12px;
+}
+
+body.dark .score-board {
+    background: var(--board-bg-dark);
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
 
 /* 모달 및 오버레이 */
 .overlay {
@@ -107,57 +86,42 @@ body.dark .hud {
 
 .hidden { display: none !important; }
 
-.upgrade-modal, .shop-modal {
+.upgrade-modal {
     background: var(--card-bg-light);
     width: 85%;
     max-height: 90%;
     padding: 20px;
     border-radius: 20px;
     text-align: center;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    overflow-y: auto;
 }
 
-body.dark .upgrade-modal, body.dark .shop-modal {
+body.dark .upgrade-modal {
     background: var(--card-bg-dark);
     color: #eee;
 }
 
-.upgrade-list, .shop-list {
+.upgrade-list {
     display: flex;
     flex-direction: column;
     gap: 10px;
     margin: 20px 0;
 }
 
-.upgrade-item, .shop-item {
+.upgrade-item {
     padding: 12px;
     background: #f0f0f0;
     border-radius: 12px;
     cursor: pointer;
-    transition: transform 0.1s, background 0.2s;
     text-align: left;
-    border: 2px solid transparent;
 }
 
-body.dark .upgrade-item, body.dark .shop-item {
-    background: #2a2a2a;
-}
-
-.upgrade-item:hover, .shop-item:hover {
-    transform: scale(1.02);
-    background: #e0e0e0;
-    border-color: var(--primary-color);
-}
-
-body.dark .upgrade-item:hover, body.dark .shop-item:hover {
-    background: #333;
-}
+body.dark .upgrade-item { background: #2a2a2a; }
+.upgrade-item:hover { background: #e0e0e0; border: 2px solid var(--primary-color); }
+body.dark .upgrade-item:hover { background: #333; }
 
 .item-name { font-weight: 900; display: block; margin-bottom: 4px; }
 .item-desc { font-size: 0.8rem; color: #666; }
 body.dark .item-desc { color: #aaa; }
-.item-cost { float: right; color: #f1c40f; font-weight: 900; }
 
 #start-overlay .menu-content {
     background: white;

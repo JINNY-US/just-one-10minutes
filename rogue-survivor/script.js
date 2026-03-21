@@ -44,19 +44,20 @@ class Player {
         this.speed = 3;
         this.hp = 100;
         this.maxHp = 100;
-        this.magnetRange = 100; // 초기 자성 범위
+        this.magnetRange = 100;
         this.weapons = [
             { type: 'sword', level: 1, timer: 0 },
-            { type: 'arrow', level: 1, timer: 0 }
+            { type: 'arrow', level: 1, timer: 0, damage: 30 }
         ];
     }
 
     update() {
         let dx = 0, dy = 0;
-        if (keys['ArrowUp'] || keys['KeyW']) dy -= 1;
-        if (keys['ArrowDown'] || keys['KeyS']) dy += 1;
-        if (keys['ArrowLeft'] || keys['KeyA']) dx -= 1;
-        if (keys['ArrowRight'] || keys['KeyD']) dx += 1;
+        // WASD 이동 우선
+        if (keys['KeyW']) dy -= 1;
+        if (keys['KeyS']) dy += 1;
+        if (keys['KeyA']) dx -= 1;
+        if (keys['KeyD']) dx += 1;
 
         if (dx !== 0 && dy !== 0) {
             const mag = Math.sqrt(dx * dx + dy * dy);
@@ -66,7 +67,7 @@ class Player {
         this.x += dx * this.speed;
         this.y += dy * this.speed;
 
-        // 맵 랩핑 (Wrap-around)
+        // 맵 랩핑
         if (this.x < 0) this.x = GAME_WIDTH;
         if (this.x > GAME_WIDTH) this.x = 0;
         if (this.y < 0) this.y = GAME_HEIGHT;
@@ -74,6 +75,7 @@ class Player {
     }
 
     draw() {
+        // 플레이어 캐릭터
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fillStyle = '#3498db';
@@ -82,6 +84,14 @@ class Player {
         ctx.lineWidth = 2;
         ctx.stroke();
         ctx.closePath();
+
+        // 발 밑 HP 바
+        const barWidth = 40;
+        const barHeight = 6;
+        ctx.fillStyle = '#444';
+        ctx.fillRect(this.x - barWidth / 2, this.y + this.radius + 10, barWidth, barHeight);
+        ctx.fillStyle = '#ff5252';
+        ctx.fillRect(this.x - barWidth / 2, this.y + this.radius + 10, (this.hp / this.maxHp) * barWidth, barHeight);
     }
 }
 
@@ -93,23 +103,15 @@ class Enemy {
         this.radius = type === 'boss' ? 40 : 12;
         this.hp = type === 'boss' ? 1000 : 20 + (gameTime / 5);
         this.maxHp = this.hp;
-        
-        // 적 속도 설정 (초반 속도 낮춤, 최대 상한선 2.5)
         const baseSpeed = type === 'boss' ? 1.2 : 0.6 + Math.random() * 0.5;
-        const timeBonus = gameTime / 120;
-        this.speed = Math.min(2.5, baseSpeed + timeBonus); 
-        
+        this.speed = Math.min(2.5, baseSpeed + (gameTime / 120)); 
         this.color = type === 'boss' ? '#e74c3c' : '#95a5a6';
     }
 
     update(player) {
-        // 플레이어 방향으로 이동
         const angle = Math.atan2(player.y - this.y, player.x - this.x);
         this.x += Math.cos(angle) * this.speed;
         this.y += Math.sin(angle) * this.speed;
-
-        // 적도 맵 랩핑 가능 (옵션: 적은 랩핑하지 않고 플레이어를 계속 추적하게 할 수도 있음)
-        // 여기서는 플레이어의 랩핑에 맞춰 자연스럽게 보이도록 처리하지 않음 (추적 로직 유지)
     }
 
     draw() {
@@ -143,8 +145,6 @@ class Projectile {
         this.x += this.vx;
         this.y += this.vy;
         this.life--;
-        
-        // 투사체도 맵 랩핑
         if (this.x < 0) this.x = GAME_WIDTH;
         if (this.x > GAME_WIDTH) this.x = 0;
         if (this.y < 0) this.y = GAME_HEIGHT;
@@ -170,12 +170,7 @@ class Drop {
 
     update(player) {
         const dist = getDist(this.x, this.y, player.x, player.y);
-        
-        // 자성 로직: 일정 거리 안에 들어오면 플레이어에게 빨려 들어감
-        if (dist < player.magnetRange) {
-            this.isBeingPulled = true;
-        }
-
+        if (dist < player.magnetRange) this.isBeingPulled = true;
         if (this.isBeingPulled) {
             const angle = Math.atan2(player.y - this.y, player.x - this.x);
             this.x += Math.cos(angle) * 8;
@@ -188,14 +183,10 @@ class Drop {
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fillStyle = '#2ecc71';
         ctx.fill();
-        ctx.strokeStyle = 'white';
-        ctx.lineWidth = 1;
-        ctx.stroke();
         ctx.closePath();
     }
 }
 
-// 게임 매니저
 let player = new Player();
 let enemies = [];
 let projectiles = [];
@@ -203,7 +194,6 @@ let drops = [];
 
 function spawnEnemy() {
     if (enemies.length > 60) return;
-    
     let x, y;
     if (Math.random() < 0.5) {
         x = Math.random() < 0.5 ? -20 : GAME_WIDTH + 20;
@@ -212,7 +202,6 @@ function spawnEnemy() {
         x = Math.random() * GAME_WIDTH;
         y = Math.random() < 0.5 ? -20 : GAME_HEIGHT + 20;
     }
-    
     if (killCount > 0 && killCount % 100 === 0 && !enemies.find(e => e.type === 'boss')) {
         enemies.push(new Enemy(x, y, 'boss'));
     } else {
@@ -228,16 +217,25 @@ function update(time) {
 
     player.update();
 
-    projectiles.push(...updateWeapons(dt));
+    // 무기 업데이트
+    const arrowWeapon = player.weapons.find(w => w.type === 'arrow');
+    if (arrowWeapon) {
+        arrowWeapon.timer += dt;
+        if (arrowWeapon.timer > 1200) {
+            const target = findNearestEnemy();
+            if (target) {
+                projectiles.push(new Projectile(player.x, player.y, target.x, target.y, arrowWeapon.damage));
+                arrowWeapon.timer = 0;
+            }
+        }
+    }
 
     enemies.forEach((enemy, eIdx) => {
         enemy.update(player);
-        
         if (getDist(player.x, player.y, enemy.x, enemy.y) < player.radius + enemy.radius) {
             player.hp -= 0.3;
             if (player.hp <= 0) gameOver();
         }
-
         projectiles.forEach((p, pIdx) => {
             if (getDist(p.x, p.y, enemy.x, enemy.y) < p.radius + enemy.radius) {
                 enemy.hp -= p.damage;
@@ -252,11 +250,12 @@ function update(time) {
     });
 
     projectiles = projectiles.filter(p => p.life > 0);
+    projectiles.forEach(p => p.update());
 
     drops.forEach((drop, dIdx) => {
         drop.update(player);
         if (getDist(player.x, player.y, drop.x, drop.y) < player.radius + 10) {
-            xp += 20;
+            xp += 25;
             if (xp >= nextXp) levelUp();
             drops.splice(dIdx, 1);
         }
@@ -269,43 +268,23 @@ function update(time) {
     requestAnimationFrame(update);
 }
 
-function updateWeapons(dt) {
-    let newProjectiles = [];
-    player.weapons.forEach(w => {
-        w.timer += dt;
-        if (w.type === 'arrow' && w.timer > 1200) {
-            const target = findNearestEnemy();
-            if (target) {
-                newProjectiles.push(new Projectile(player.x, player.y, target.x, target.y, 30));
-                w.timer = 0;
-            }
-        }
-    });
-    return newProjectiles;
-}
-
 function findNearestEnemy() {
     let nearest = null;
     let minDist = Infinity;
     enemies.forEach(e => {
         const d = getDist(player.x, player.y, e.x, e.y);
-        if (d < minDist) {
-            minDist = d;
-            nearest = e;
-        }
+        if (d < minDist) { minDist = d; nearest = e; }
     });
     return nearest;
 }
 
 function render() {
     ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-    
     ctx.strokeStyle = 'rgba(255,255,255,0.05)';
     for(let i=0; i<GAME_WIDTH; i+=50) {
         ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,GAME_HEIGHT); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(GAME_WIDTH,i); ctx.stroke();
     }
-
     drops.forEach(d => d.draw());
     enemies.forEach(e => e.draw());
     projectiles.forEach(p => p.draw());
@@ -313,23 +292,22 @@ function render() {
 
     const swordWeapon = player.weapons.find(w => w.type === 'sword');
     if (swordWeapon) {
-        const angle = gameTime * (4 + swordWeapon.level * 0.5);
-        const count = 1 + Math.floor(swordWeapon.level / 2); // 강화 효과 예시
+        const speed = 4 + swordWeapon.level * 0.8;
+        const angle = (performance.now() / 1000) * speed;
+        const count = Math.floor(swordWeapon.level / 2) + 1;
         for(let i=0; i<count; i++) {
             const orbitAngle = angle + (Math.PI * 2 / count) * i;
+            const sx = player.x + Math.cos(orbitAngle) * 60;
+            const sy = player.y + Math.sin(orbitAngle) * 60;
             ctx.save();
             ctx.translate(player.x, player.y);
             ctx.rotate(orbitAngle);
-            ctx.fillStyle = 'rgba(241, 196, 15, 0.7)';
+            ctx.fillStyle = 'rgba(241, 196, 15, 0.8)';
             ctx.fillRect(50, -4, 25, 8);
             ctx.restore();
-            
-            // 회전 칼날 충돌 판정 (단순화)
-            const sx = player.x + Math.cos(orbitAngle) * 60;
-            const sy = player.y + Math.sin(orbitAngle) * 60;
             enemies.forEach((enemy, eIdx) => {
                 if (getDist(sx, sy, enemy.x, enemy.y) < 20 + enemy.radius) {
-                    enemy.hp -= 1; // 초당 다단 히트
+                    enemy.hp -= 0.5;
                     if (enemy.hp <= 0) {
                         killCount++;
                         drops.push(new Drop(enemy.x, enemy.y));
@@ -342,26 +320,20 @@ function render() {
 }
 
 function updateHUD() {
-    document.getElementById('hp-bar').style.width = `${(player.hp / player.maxHp) * 100}%`;
-    document.getElementById('hp-text').textContent = `HP: ${Math.ceil(player.hp)}/${player.maxHp}`;
     document.getElementById('xp-bar').style.width = `${(xp / nextXp) * 100}%`;
-    document.getElementById('level-val').textContent = level;
-    document.getElementById('kill-val').textContent = killCount;
-    
-    const min = Math.floor(gameTime / 60);
-    const sec = Math.floor(gameTime % 60);
-    document.getElementById('game-timer').textContent = `${min.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+    document.getElementById('level-display').textContent = `LEVEL ${level}`;
+    const score = Math.floor(gameTime) + killCount;
+    document.getElementById('score-val').textContent = score;
 }
 
 function levelUp() {
     isPlaying = false;
     xp = 0;
     level++;
-    nextXp *= 1.25;
+    nextXp = Math.floor(nextXp * 1.3);
     const overlay = document.getElementById('levelup-overlay');
     const list = document.getElementById('upgrade-list');
     list.innerHTML = '';
-    
     const shuffled = [...UPGRADES].sort(() => 0.5 - Math.random()).slice(0, 3);
     shuffled.forEach(up => {
         const div = document.createElement('div');
@@ -381,38 +353,36 @@ function levelUp() {
 
 function applyUpgrade(up) {
     if (up.id === 'hp_max') { player.maxHp += 20; player.hp += 20; }
-    if (up.id === 'move_speed') player.speed *= 1.1;
-    if (up.id === 'magnet_range') player.magnetRange += 50;
-    if (up.id === 'sword_speed') {
+    if (up.id === 'move_speed') player.speed += 0.3;
+    if (up.id === 'magnet_range') player.magnetRange += 40;
+    if (up.id === 'sword_speed' || up.id === 'sword_count') {
         const w = player.weapons.find(w => w.type === 'sword');
         if (w) w.level++;
-    }
-    if (up.id === 'sword_count') {
-        const w = player.weapons.find(w => w.type === 'sword');
-        if (w) w.level += 2;
     }
     if (up.id === 'arrow_dmg') {
         const w = player.weapons.find(w => w.type === 'arrow');
-        if (w) w.level++;
+        if (w) { w.level++; w.damage += 15; }
     }
 }
 
-document.getElementById('start-btn').onclick = () => {
+function startGame() {
     document.getElementById('start-overlay').style.display = 'none';
     isPlaying = true;
     lastTime = performance.now();
     requestAnimationFrame(update);
-};
+}
+
+function resetGame() { location.reload(); }
+
+document.getElementById('start-btn').onclick = startGame;
+document.getElementById('reset-btn').onclick = resetGame;
 
 function gameOver() {
     isPlaying = false;
-    alert(`게임 오버! 생존 시간: ${document.getElementById('game-timer').textContent}, 처치 수: ${killCount}`);
+    const finalScore = Math.floor(gameTime) + killCount;
+    alert(`게임 오버! 최종 점수: ${finalScore}점 (생존: ${Math.floor(gameTime)}초, 처치: ${killCount}마리)`);
     location.reload();
 }
 
-function init() {
-    updateHUD();
-    render();
-}
-
-init();
+updateHUD();
+render();
