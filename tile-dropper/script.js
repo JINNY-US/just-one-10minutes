@@ -243,7 +243,7 @@ function findMatches(index) {
 
 // UI 업데이트
 function updateUI() {
-  scoreEl.textContent = "점수: " + score;
+  scoreEl.textContent = "Score: " + score;
 
   const percent = (time / MAX_TIME) * 100;
   timerBar.style.width = percent + "%";

@@ -8,21 +8,21 @@
     --c5: #ff9800; /* Orange */
     --c6: #00bcd4; /* Cyan */
     
-    --tile-size: 50px;
+    --tile-size: 45px;
     --tile-gap: 5px;
 }
 
 /* 모바일 대응 */
 @media (max-width: 480px) {
     :root {
-        --tile-size: 42px;
+        --tile-size: 40px;
         --tile-gap: 4px;
     }
 }
 
 @media (max-width: 350px) {
     :root {
-        --tile-size: 36px;
+        --tile-size: 34px;
         --tile-gap: 3px;
     }
 }
@@ -41,6 +41,10 @@ h1 {
 
 body.dark h1 {
     color: var(--text-dark);
+}
+
+.game-container {
+    max-width: 450px; /* 타일 팡 전용 컨테이너 너비 확장 */
 }
 
 .game-board {
