@@ -141,7 +141,7 @@ async function movePlayer(dx, dy) {
         else if (arrow === 'left') { dx = -1; dy = 0; }
         else if (arrow === 'right') { dx = 1; dy = 0; }
 
-        await new Promise(r => setTimeout(r, 60));
+        await new Promise(r => setTimeout(r, 150));
         if (isGameOver) break;
     }
     isMoving = false;
