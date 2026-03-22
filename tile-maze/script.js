@@ -15,12 +15,12 @@ const gameOverOverlay = document.getElementById('game-over-overlay');
 let score = 0;
 let playerPos = { x: 0, y: 3 }; 
 let mazeMap = new Map(); 
-let pathExitY = 3; 
+let pathExitY = 3; // 이전 열에서 정답 경로가 도달한 Y 좌표
 let isGameOver = false;
 let isMoving = false;
 
 // 속도 조절 변수
-let speedLevel = 1; // 1, 2, 3
+let speedLevel = 1; 
 const speedDelays = { 1: 300, 2: 150, 3: 100 };
 
 // 초기 상태: 블러 처리
@@ -31,6 +31,7 @@ function generateColumn(x) {
     if (mazeMap.has(`${x},0`)) return;
 
     if (x === 0) {
+        // 첫 번째 줄은 무조건 모두 빈칸으로 고정
         for (let y = 0; y < VIEW_H; y++) {
             mazeMap.set(`${x},${y}`, null);
         }
@@ -38,44 +39,40 @@ function generateColumn(x) {
         return;
     }
 
+    // 이번 열의 정답 경로 생성
     const entranceY = pathExitY;
-    let currentY = entranceY;
+    const targetY = Math.floor(Math.random() * VIEW_H); // 이번 열에서 오른쪽으로 나갈 Y 좌표
     let columnPathKeys = new Set();
 
-    if (Math.random() < 0.6) {
-        const moveCount = Math.floor(Math.random() * 2) + 1; 
-        const direction = Math.random() < 0.5 ? -1 : 1;
-        for (let i = 0; i < moveCount; i++) {
-            const nextY = currentY + direction;
-            if (nextY >= 0 && nextY < VIEW_H) {
-                mazeMap.set(`${x},${currentY}`, direction === -1 ? 'up' : 'down');
-                columnPathKeys.add(`${x},${currentY}`);
-                currentY = nextY;
-            } else break;
-        }
+    // entranceY에서 targetY까지 수동으로 이동해야 하는 구간을 빈칸(null)으로 설정
+    let tempY = entranceY;
+    while (true) {
+        mazeMap.set(`${x},${tempY}`, null);
+        columnPathKeys.add(`${x},${tempY}`);
+        if (tempY === targetY) break;
+        tempY += (targetY > tempY ? 1 : -1);
     }
 
-    const isStopColumn = (x % 4 === 0);
-    if (isStopColumn) {
-        mazeMap.set(`${x},${currentY}`, null); 
+    // targetY 위치에 오른쪽 전진 화살표 배치 (단, 5열마다 한번은 멈추게 null 배치)
+    const isStopTile = (x % 5 === 0);
+    if (!isStopTile) {
+        mazeMap.set(`${x},targetY_placeholder`, 'right'); // 아래에서 실제 좌표로 치환
+        mazeMap.set(`${x},${targetY}`, 'right');
     } else {
-        mazeMap.set(`${x},${currentY}`, 'right'); 
+        mazeMap.set(`${x},${targetY}`, null);
     }
-    columnPathKeys.add(`${x},${currentY}`);
-    pathExitY = currentY; 
+    columnPathKeys.add(`${x},${targetY}`);
+    pathExitY = targetY; // 다음 열을 위한 출구 좌표 저장
 
+    // 나머지 타일은 함정 화살표로 채움
     for (let y = 0; y < VIEW_H; y++) {
         const key = `${x},${y}`;
         if (columnPathKeys.has(key)) continue;
 
-        const trapRoll = Math.random();
-        if (trapRoll < 0.05) {
-            mazeMap.set(key, null); 
-        } else {
-            const trapDirs = ['up', 'down', 'left', 'right'];
-            const dir = trapDirs[Math.floor(Math.random() * trapDirs.length)];
-            mazeMap.set(key, dir);
-        }
+        // 함정: 주로 루프를 만들거나 벽으로 보냄
+        const trapDirs = ['up', 'down', 'left', 'right'];
+        const dir = trapDirs[Math.floor(Math.random() * trapDirs.length)];
+        mazeMap.set(key, dir);
     }
 }
 
@@ -123,6 +120,7 @@ async function movePlayer(dx, dy) {
         let nextX = playerPos.x + dx;
         let nextY = playerPos.y + dy;
 
+        // 벽 충돌 검사
         if (nextY < 0 || nextY >= VIEW_H || nextX < 0) {
             gameOver("벽에 부딪혔습니다!");
             break;
@@ -138,13 +136,16 @@ async function movePlayer(dx, dy) {
         playerPos.x = nextX;
         playerPos.y = nextY;
 
-        score = Math.max(score, playerPos.x);
-        updateScore();
+        // 점수 산정: 새로운 열에 도달했을 때만 갱신
+        if (playerPos.x > score) {
+            score = playerPos.x;
+            updateScore();
+        }
         
         renderView();
 
         const arrow = mazeMap.get(`${playerPos.x},${playerPos.y}`);
-        if (!arrow) break; 
+        if (!arrow) break; // 빈칸 도착 (수동 조작 필요)
 
         if (arrow === 'up') { dx = 0; dy = -1; }
         else if (arrow === 'down') { dx = 0; dy = 1; }
@@ -231,7 +232,6 @@ restartBtn.addEventListener('click', startGame);
 resetBtn.addEventListener('click', startGame);
 speedBtn.addEventListener('click', toggleSpeed);
 
-// 터치 이벤트 대상을 컨테이너로 변경 (오버레이 방해 방지)
 boardContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
 boardContainer.addEventListener('touchend', handleTouchEnd, { passive: false });
 boardContainer.addEventListener('touchmove', (e) => {
