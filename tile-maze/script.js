@@ -14,7 +14,7 @@ const gameOverOverlay = document.getElementById('game-over-overlay');
 let score = 0;
 let playerPos = { x: 0, y: 3 }; 
 let mazeMap = new Map(); 
-let pathExitY = 3; // 이전 열의 정답 경로가 끝난 Y 좌표
+let pathExitY = 3; 
 let isGameOver = false;
 let isMoving = false;
 
@@ -26,7 +26,6 @@ function generateColumn(x) {
     if (mazeMap.has(`${x},0`)) return;
 
     if (x === 0) {
-        // 첫 번째 줄은 무조건 모두 빈칸으로 고정
         for (let y = 0; y < VIEW_H; y++) {
             mazeMap.set(`${x},${y}`, null);
         }
@@ -34,14 +33,12 @@ function generateColumn(x) {
         return;
     }
 
-    // 이번 열에서 정답 경로 생성
     const entranceY = pathExitY;
     let currentY = entranceY;
     let columnPathKeys = new Set();
 
-    // 1. 수직 이동 결정 (0~2칸)
     if (Math.random() < 0.6) {
-        const moveCount = Math.floor(Math.random() * 2) + 1; // 1~2칸
+        const moveCount = Math.floor(Math.random() * 2) + 1; 
         const direction = Math.random() < 0.5 ? -1 : 1;
         for (let i = 0; i < moveCount; i++) {
             const nextY = currentY + direction;
@@ -53,26 +50,23 @@ function generateColumn(x) {
         }
     }
 
-    // 2. 마지막엔 오른쪽으로 나가도록 설정 (4열마다 한 번씩 빈칸(null)을 두어 정지 유도)
     const isStopColumn = (x % 4 === 0);
     if (isStopColumn) {
-        mazeMap.set(`${x},${currentY}`, null); // 정지 타일
+        mazeMap.set(`${x},${currentY}`, null); 
     } else {
-        mazeMap.set(`${x},${currentY}`, 'right'); // 전진 화살표
+        mazeMap.set(`${x},${currentY}`, 'right'); 
     }
     columnPathKeys.add(`${x},${currentY}`);
     pathExitY = currentY; 
 
-    // 3. 나머지 타일은 함정으로 채움
     for (let y = 0; y < VIEW_H; y++) {
         const key = `${x},${y}`;
         if (columnPathKeys.has(key)) continue;
 
         const trapRoll = Math.random();
         if (trapRoll < 0.05) {
-            mazeMap.set(key, null); // 5% 확률로 멈추는 함정
+            mazeMap.set(key, null); 
         } else {
-            // 함정은 주로 루프(left)나 벽(up, down)을 향하게 함
             const trapDirs = ['up', 'down', 'left', 'right'];
             const dir = trapDirs[Math.floor(Math.random() * trapDirs.length)];
             mazeMap.set(key, dir);
@@ -124,7 +118,6 @@ async function movePlayer(dx, dy) {
         let nextX = playerPos.x + dx;
         let nextY = playerPos.y + dy;
 
-        // 벽 충돌 검사
         if (nextY < 0 || nextY >= VIEW_H || nextX < 0) {
             gameOver("벽에 부딪혔습니다!");
             break;
@@ -137,24 +130,17 @@ async function movePlayer(dx, dy) {
         }
         pathTrace.add(state);
 
-        const currentTileDir = mazeMap.get(`${playerPos.x},${playerPos.y}`);
-        const nextTileDir = mazeMap.get(`${nextX},${nextY}`);
-        
-        const isFromArrow = currentTileDir !== null;
-        const isToArrow = nextTileDir !== null;
-
         playerPos.x = nextX;
         playerPos.y = nextY;
 
-        if (isFromArrow || isToArrow) {
-            score++;
-            updateScore();
-        }
+        // 점수 산정: 오른쪽으로 전진한 최대 거리를 점수로 사용
+        score = Math.max(score, playerPos.x);
+        updateScore();
         
         renderView();
 
         const arrow = mazeMap.get(`${playerPos.x},${playerPos.y}`);
-        if (!arrow) break; // 빈칸(정지 타일) 도착
+        if (!arrow) break; 
 
         if (arrow === 'up') { dx = 0; dy = -1; }
         else if (arrow === 'down') { dx = 0; dy = 1; }
