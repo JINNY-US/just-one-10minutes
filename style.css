@@ -77,13 +77,25 @@ header h1 {
 /* Game Cards Grid */
 .game-list {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr); /* 기본 3열 */
     gap: 20px;
 }
 
+/* 태블릿 (2열) */
+@media (max-width: 1024px) {
+    .game-list {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* 모바일 (1열) */
 @media (max-width: 768px) {
     .game-list {
         grid-template-columns: 1fr;
+    }
+    
+    .container {
+        padding: 20px 15px;
     }
 }
 
