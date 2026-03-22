@@ -19,10 +19,17 @@
     }
 }
 
-@media (max-width: 380px) {
+@media (max-width: 400px) {
     :root {
-        --tile-size: 17px;
+        --tile-size: 16px;
         --tile-gap: 2px;
+    }
+}
+
+@media (max-width: 350px) {
+    :root {
+        --tile-size: 14px;
+        --tile-gap: 1px;
     }
 }
 * {

@@ -50,6 +50,13 @@ body.dark {
     transition: background-color 0.3s, box-shadow 0.3s;
 }
 
+@media (max-width: 480px) {
+    .game-container {
+        padding: 20px 10px;
+        width: 95%;
+    }
+}
+
 body.dark .game-container {
     background-color: var(--card-bg-dark);
     box-shadow: 0 10px 25px rgba(0,0,0,0.3);

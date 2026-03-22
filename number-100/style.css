@@ -1,22 +1,40 @@
 /* Number 100 전용 스타일 */
+:root {
+    --tile-size: 75px;
+    --tile-gap: 10px;
+}
+
+@media (max-width: 480px) {
+    :root {
+        --tile-size: 65px;
+        --tile-gap: 8px;
+    }
+}
+
+@media (max-width: 380px) {
+    :root {
+        --tile-size: 55px;
+        --tile-gap: 6px;
+    }
+}
 
 #game-board {
     display: grid;
-    grid-template-columns: repeat(4, 75px);
-    grid-template-rows: repeat(4, 75px);
-    gap: 10px;
-    padding: 10px;
+    grid-template-columns: repeat(4, var(--tile-size));
+    grid-template-rows: repeat(4, var(--tile-size));
+    gap: var(--tile-gap);
+    padding: var(--tile-gap);
     background-color: transparent;
 }
 
 .tile {
-    width: 75px;
-    height: 75px;
+    width: var(--tile-size);
+    height: var(--tile-size);
     background-color: #ecf0f1;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: calc(var(--tile-size) * 0.4);
     font-weight: bold;
     cursor: pointer;
     border-radius: 10px;
