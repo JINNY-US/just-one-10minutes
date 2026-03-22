@@ -231,9 +231,12 @@ restartBtn.addEventListener('click', startGame);
 resetBtn.addEventListener('click', startGame);
 speedBtn.addEventListener('click', toggleSpeed);
 
-gameBoard.addEventListener('touchstart', handleTouchStart, { passive: false });
-gameBoard.addEventListener('touchend', handleTouchEnd, { passive: false });
-gameBoard.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+// 터치 이벤트 대상을 컨테이너로 변경 (오버레이 방해 방지)
+boardContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
+boardContainer.addEventListener('touchend', handleTouchEnd, { passive: false });
+boardContainer.addEventListener('touchmove', (e) => {
+    if (e.cancelable) e.preventDefault();
+}, { passive: false });
 
 window.addEventListener('keydown', (e) => {
     if (isGameOver || isMoving || !startOverlay.classList.contains('hidden')) return;

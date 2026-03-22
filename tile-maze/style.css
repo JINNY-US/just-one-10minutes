@@ -4,71 +4,65 @@
     --maze-gap: 2px;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     :root {
         --maze-tile-size: 40px;
     }
 }
 
-@media (max-width: 450px) {
+/* 모바일 전용: 11칸이 화면 너비에 꽉 차도록 계산 */
+@media (max-width: 480px) {
     :root {
-        --maze-tile-size: 32px;
+        --maze-tile-size: calc((95vw - 40px) / 11);
+        --maze-gap: 1px;
     }
 }
 
 .game-container {
-    max-width: 700px; /* 가로형 보드에 맞춰 확장 */
-}
-
-/* 속도 조절 버튼 */
-#speed-control {
-    margin-bottom: 15px;
-}
-
-#speed-btn {
-    min-width: 120px;
-    padding: 8px 15px;
-    font-size: 0.9rem;
+    width: 100%;
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 10px;
+    box-sizing: border-box;
 }
 
 #board-container {
     position: relative;
     width: fit-content;
-    margin: 0 auto 20px;
-    overflow: hidden;
+    margin: 0 auto 15px;
     border-radius: 12px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    background-color: var(--board-bg-light);
+    touch-action: none; /* 브라우저 스크롤 방지 */
+}
+
+body.dark #board-container {
+    background-color: var(--board-bg-dark);
 }
 
 #game-board {
     display: grid;
-    grid-template-columns: repeat(11, var(--maze-tile-size)); /* 11칸 */
-    grid-template-rows: repeat(7, var(--maze-tile-size));    /* 7칸 */
+    grid-template-columns: repeat(11, var(--maze-tile-size));
+    grid-template-rows: repeat(7, var(--maze-tile-size));
     gap: var(--maze-gap);
-    padding: 10px;
-    background-color: var(--board-bg-light);
+    padding: 8px;
     transition: filter 0.3s ease;
-    touch-action: none;
-}
-
-body.dark #game-board {
-    background-color: var(--board-bg-dark);
 }
 
 /* 시작 시 블러 처리 */
 #board-container.overlay-active #game-board {
-    filter: blur(10px);
+    filter: blur(8px);
 }
 
 .tile {
     width: var(--maze-tile-size);
     height: var(--maze-tile-size);
     background-color: rgba(255, 255, 255, 0.4);
-    border-radius: 4px;
+    border-radius: 2px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
+    font-size: calc(var(--maze-tile-size) * 0.5);
 }
 
 body.dark .tile {
@@ -78,10 +72,9 @@ body.dark .tile {
 
 .tile.arrow { color: var(--primary-color); font-weight: bold; opacity: 0.8; }
 
-/* 빈칸 타일 (시작 줄 및 정지 칸) */
 .tile.empty-tile {
     background-color: #fff !important;
-    box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+    box-shadow: inset 0 0 3px rgba(0,0,0,0.05);
 }
 
 body.dark .tile.empty-tile {
@@ -94,25 +87,37 @@ body.dark .tile.empty-tile {
     z-index: 10;
     transform: scale(0.9);
     border-radius: 50%;
-    box-shadow: 0 0 15px var(--accent-color);
+    box-shadow: 0 0 10px var(--accent-color);
+}
+
+/* 모바일 스와이프 가이드 */
+.mobile-guide {
+    display: none;
+    font-size: 0.8rem;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+@media (pointer: coarse) {
+    .mobile-guide { display: block; }
 }
 
 /* 점수판 및 컨트롤 */
-#score-container { margin: 15px 0; font-size: 1.8rem; font-weight: 900; color: var(--primary-color); }
-.controls { display: flex; justify-content: center; gap: 12px; margin-bottom: 25px; }
-.instructions { margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.03); border-radius: 10px; font-size: 0.9rem; color: #666; }
+#score-container { margin: 10px 0; font-size: 1.5rem; font-weight: 900; color: var(--primary-color); }
+.controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+#speed-control { margin-bottom: 10px; }
+#speed-btn { min-width: 100px; padding: 6px 12px; font-size: 0.85rem; }
+
+.instructions { margin-top: 15px; padding: 12px; background: rgba(0,0,0,0.03); border-radius: 10px; font-size: 0.85rem; color: #666; }
 body.dark .instructions { background: rgba(255,255,255,0.03); color: #90a4ae; }
 
-#game-over-overlay {
+#start-overlay, #game-over-overlay {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.85);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    color: white;
-    z-index: 100;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    color: white; z-index: 100; border-radius: 12px;
 }
 
 .hidden { display: none !important; }
