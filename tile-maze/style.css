@@ -1,34 +1,41 @@
-/* Tile Maze 전용 스타일 */
+/* Tile Maze 전용 스타일 - 11x7 가로형 미로 */
 :root {
-    --maze-tile-size: 40px;
-    --maze-gap: 1px;
+    --maze-tile-size: 50px;
+    --maze-gap: 2px;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
+    :root {
+        --maze-tile-size: 40px;
+    }
+}
+
+@media (max-width: 450px) {
     :root {
         --maze-tile-size: 32px;
     }
 }
 
 .game-container {
-    max-width: 500px;
-    padding-bottom: 40px;
+    max-width: 700px; /* 가로형 보드에 맞춰 확장 */
 }
 
 #board-container {
     position: relative;
     width: fit-content;
     margin: 0 auto 20px;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
 
 #game-board {
     display: grid;
-    grid-template-columns: repeat(11, var(--maze-tile-size));
-    grid-template-rows: repeat(11, var(--maze-tile-size));
+    grid-template-columns: repeat(11, var(--maze-tile-size)); /* 11칸 */
+    grid-template-rows: repeat(7, var(--maze-tile-size));    /* 7칸 */
     gap: var(--maze-gap);
     padding: 10px;
     background-color: var(--board-bg-light);
-    border-radius: 12px;
     transition: filter 0.3s ease;
 }
 
@@ -38,46 +45,31 @@ body.dark #game-board {
 
 /* 시작 시 블러 처리 */
 #board-container.overlay-active #game-board {
-    filter: blur(8px);
-}
-
-/* 시작 오버레이 */
-#start-overlay {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 20;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-}
-
-body.dark #start-overlay {
-    background-color: rgba(0, 0, 0, 0.1);
+    filter: blur(10px);
 }
 
 .tile {
     width: var(--maze-tile-size);
     height: var(--maze-tile-size);
-    background-color: rgba(255, 255, 255, 0.5);
-    border-radius: 2px;
+    background-color: rgba(255, 255, 255, 0.4);
+    border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
 }
 
 body.dark .tile {
-    background-color: rgba(255, 255, 255, 0.03);
-    color: #555;
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #666;
 }
 
-.tile.arrow { color: var(--primary-color); font-weight: bold; opacity: 0.7; }
+.tile.arrow { color: var(--primary-color); font-weight: bold; opacity: 0.8; }
 
+/* 빈칸 타일 (시작 줄 및 정지 칸) */
 .tile.empty-tile {
     background-color: #fff !important;
-    box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
 }
 
 body.dark .tile.empty-tile {
@@ -88,42 +80,16 @@ body.dark .tile.empty-tile {
     background-color: var(--accent-color) !important;
     color: white;
     z-index: 10;
-    transform: scale(0.95);
+    transform: scale(0.9);
     border-radius: 50%;
     box-shadow: 0 0 15px var(--accent-color);
 }
 
-/* 점수판 (보드 아래) */
-#score-container {
-    margin: 15px 0;
-    font-size: 1.8rem;
-    font-weight: 900;
-    color: var(--primary-color);
-}
-
-/* 컨트롤 버튼 */
-.controls {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    margin-bottom: 25px;
-}
-
-/* 게임 설명 (맨 아래) */
-.instructions {
-    margin-top: 20px;
-    padding: 15px;
-    background-color: rgba(0, 0, 0, 0.03);
-    border-radius: 10px;
-    font-size: 0.9rem;
-    color: #666;
-    line-height: 1.6;
-}
-
-body.dark .instructions {
-    background-color: rgba(255, 255, 255, 0.03);
-    color: #90a4ae;
-}
+/* 점수판 및 컨트롤 */
+#score-container { margin: 15px 0; font-size: 1.8rem; font-weight: 900; color: var(--primary-color); }
+.controls { display: flex; justify-content: center; gap: 12px; margin-bottom: 25px; }
+.instructions { margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.03); border-radius: 10px; font-size: 0.9rem; color: #666; }
+body.dark .instructions { background: rgba(255,255,255,0.03); color: #90a4ae; }
 
 #game-over-overlay {
     position: absolute;
@@ -135,7 +101,6 @@ body.dark .instructions {
     align-items: center;
     color: white;
     z-index: 100;
-    border-radius: 12px;
 }
 
 .hidden { display: none !important; }
