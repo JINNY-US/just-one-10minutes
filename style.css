@@ -263,30 +263,46 @@ input:checked + .slider:before {
 
 /* 🌙 다크모드 스타일 */
 body.dark {
-  background: #121212;
-  color: #eee;
+  background: #1e2124;
+  color: #cfd8dc;
 }
 
-body.dark .game-card {
-  background: #1e1e1e;
+body.dark header {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+body.dark header h1 {
+  color: #cfd8dc;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+body.dark .game-card .card-inner {
+  background: #282b30;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+body.dark .game-info h3 {
+  color: #cfd8dc;
+}
+
+body.dark .game-info p {
+  color: #90a4ae;
+}
+
+body.dark footer {
+  background-color: #1e2124;
+  border-top: 1px solid #36393e;
+}
+
+body.dark footer p {
+  color: #90a4ae;
 }
 
 body.dark button,
 body.dark .home-btn {
-  background: #333;
-  color: #eee;
-}
-
-body.dark #timer-container {
-  background: #333;
-}
-
-body.dark .empty.light {
-  background: #2a2a2a;
-}
-
-body.dark .empty.dark {
-  background: #1f1f1f;
+  background: #36393e;
+  color: #cfd8dc;
 }
 /* 🌙 게임 보드 공통 */
 body.dark #game {
