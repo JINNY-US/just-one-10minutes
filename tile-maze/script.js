@@ -30,7 +30,6 @@ function generateColumn(x) {
         for (let y = 0; y < VIEW_H; y++) {
             mazeMap.set(`${x},${y}`, null);
         }
-        // 시작 열(x=1)에서의 정답 입구 좌표 결정
         pathExitY = Math.floor(Math.random() * VIEW_H);
         return;
     }
@@ -41,7 +40,7 @@ function generateColumn(x) {
     let columnPathKeys = new Set();
 
     // 1. 수직 이동 결정 (0~2칸)
-    if (Math.random() < 0.5) {
+    if (Math.random() < 0.6) {
         const moveCount = Math.floor(Math.random() * 2) + 1; // 1~2칸
         const direction = Math.random() < 0.5 ? -1 : 1;
         for (let i = 0; i < moveCount; i++) {
@@ -54,20 +53,30 @@ function generateColumn(x) {
         }
     }
 
-    // 2. 마지막엔 반드시 오른쪽으로 나가도록 설정
-    mazeMap.set(`${x},${currentY}`, 'right');
+    // 2. 마지막엔 오른쪽으로 나가도록 설정 (4열마다 한 번씩 빈칸(null)을 두어 정지 유도)
+    const isStopColumn = (x % 4 === 0);
+    if (isStopColumn) {
+        mazeMap.set(`${x},${currentY}`, null); // 정지 타일
+    } else {
+        mazeMap.set(`${x},${currentY}`, 'right'); // 전진 화살표
+    }
     columnPathKeys.add(`${x},${currentY}`);
-    pathExitY = currentY; // 다음 열을 위해 출구 좌표 저장
+    pathExitY = currentY; 
 
     // 3. 나머지 타일은 함정으로 채움
     for (let y = 0; y < VIEW_H; y++) {
         const key = `${x},${y}`;
         if (columnPathKeys.has(key)) continue;
 
-        // 함정은 주로 루프(left)나 벽(up, down)을 향하게 함
-        const trapDirs = ['up', 'down', 'left', 'right'];
-        const dir = trapDirs[Math.floor(Math.random() * trapDirs.length)];
-        mazeMap.set(key, dir);
+        const trapRoll = Math.random();
+        if (trapRoll < 0.05) {
+            mazeMap.set(key, null); // 5% 확률로 멈추는 함정
+        } else {
+            // 함정은 주로 루프(left)나 벽(up, down)을 향하게 함
+            const trapDirs = ['up', 'down', 'left', 'right'];
+            const dir = trapDirs[Math.floor(Math.random() * trapDirs.length)];
+            mazeMap.set(key, dir);
+        }
     }
 }
 
@@ -128,11 +137,9 @@ async function movePlayer(dx, dy) {
         }
         pathTrace.add(state);
 
-        // 점수 계산 로직 개선
         const currentTileDir = mazeMap.get(`${playerPos.x},${playerPos.y}`);
         const nextTileDir = mazeMap.get(`${nextX},${nextY}`);
         
-        // 화살표에서 출발하거나, 화살표로 들어가는 경우에만 점수 증가
         const isFromArrow = currentTileDir !== null;
         const isToArrow = nextTileDir !== null;
 
