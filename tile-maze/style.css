@@ -48,6 +48,7 @@
     padding: 10px;
     background-color: var(--board-bg-light);
     transition: filter 0.3s ease;
+    touch-action: none;
 }
 
 body.dark #game-board {

@@ -189,16 +189,59 @@ function toggleSpeed() {
     speedLevel = (speedLevel % 3) + 1;
     const arrows = "▷".repeat(speedLevel);
     speedBtn.textContent = `Speed: ${arrows}`;
-}
-
+// 초기 보드 보여주기 (블러 상태로)
 renderView();
 
+// 스와이프 제어 변수
+let touchStartX = 0;
+let touchStartY = 0;
+
+function handleTouchStart(e) {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+}
+
+function handleTouchEnd(e) {
+    if (isGameOver || isMoving || startOverlay.offsetParent !== null) return;
+
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+
+    const dx = touchEndX - touchStartX;
+    const dy = touchEndY - touchStartY;
+
+    // 최소 스와이프 거리 (픽셀)
+    const minSwipeDistance = 30;
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+        // 가로 스와이프
+        if (Math.abs(dx) > minSwipeDistance) {
+            if (dx > 0) movePlayer(1, 0); // 오른쪽
+            else movePlayer(-1, 0); // 왼쪽
+        }
+    } else {
+        // 세로 스와이프
+        if (Math.abs(dy) > minSwipeDistance) {
+            if (dy > 0) movePlayer(0, 1); // 아래
+            else movePlayer(0, -1); // 위
+        }
+    }
+}
+
+// 이벤트 리스너
 startBtn.addEventListener('click', startGame);
 restartBtn.addEventListener('click', startGame);
 resetBtn.addEventListener('click', startGame);
 speedBtn.addEventListener('click', toggleSpeed);
 
+// 터치 이벤트 등록
+gameBoard.addEventListener('touchstart', handleTouchStart, { passive: false });
+gameBoard.addEventListener('touchend', handleTouchEnd, { passive: false });
+// 스크롤 방지
+gameBoard.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+
 window.addEventListener('keydown', (e) => {
+
     if (isGameOver || isMoving || !startOverlay.classList.contains('hidden')) return;
     switch(e.key) {
         case 'ArrowUp': movePlayer(0, -1); break;

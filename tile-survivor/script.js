@@ -18,6 +18,49 @@ const keys = {};
 window.addEventListener('keydown', e => keys[e.code] = true);
 window.addEventListener('keyup', e => keys[e.code] = false);
 
+// 조이스틱 변수
+let joystickActive = false;
+let joystickVec = { x: 0, y: 0 };
+const joystickBase = document.getElementById('joystick-base');
+const joystickHandle = document.getElementById('joystick-handle');
+const maxJoystickRadius = 45;
+
+function handleJoystick(e) {
+    if (!joystickActive || !isPlaying) return;
+    
+    const touch = e.touches ? e.touches[0] : e;
+    const rect = joystickBase.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    let dx = touch.clientX - centerX;
+    let dy = touch.clientY - centerY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    
+    if (dist > maxJoystickRadius) {
+        dx = (dx / dist) * maxJoystickRadius;
+        dy = (dy / dist) * maxJoystickRadius;
+    }
+    
+    joystickHandle.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+    
+    // 이동 벡터 정규화 (-1 ~ 1)
+    joystickVec.x = dx / maxJoystickRadius;
+    joystickVec.y = dy / maxJoystickRadius;
+}
+
+joystickBase.addEventListener('touchstart', (e) => {
+    joystickActive = true;
+    handleJoystick(e);
+}, { passive: false });
+
+window.addEventListener('touchmove', handleJoystick, { passive: false });
+window.addEventListener('touchend', () => {
+    joystickActive = false;
+    joystickVec = { x: 0, y: 0 };
+    joystickHandle.style.transform = 'translate(-50%, -50%)';
+});
+
 function getDist(x1, y1, x2, y2) {
     return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
 }
@@ -71,14 +114,25 @@ class Player {
 
     update(dt) {
         let dx = 0, dy = 0;
-        if (keys['KeyW']) dy -= 1;
-        if (keys['KeyS']) dy += 1;
-        if (keys['KeyA']) dx -= 1;
-        if (keys['KeyD']) dx += 1;
+        
+        // 키보드 입력
+        if (keys['KeyW'] || keys['ArrowUp']) dy -= 1;
+        if (keys['KeyS'] || keys['ArrowDown']) dy += 1;
+        if (keys['KeyA'] || keys['ArrowLeft']) dx -= 1;
+        if (keys['KeyD'] || keys['ArrowRight']) dx += 1;
 
-        if (dx !== 0 && dy !== 0) {
+        // 조이스틱 입력 결합
+        if (joystickActive) {
+            dx += joystickVec.x;
+            dy += joystickVec.y;
+        }
+
+        if (dx !== 0 || dy !== 0) {
             const mag = Math.sqrt(dx * dx + dy * dy);
-            dx /= mag; dy /= mag;
+            // 대각선 이동 시 속도 보정 (벡터 크기가 1을 넘지 않게)
+            if (mag > 1) {
+                dx /= mag; dy /= mag;
+            }
         }
 
         this.x += dx * this.speed;
