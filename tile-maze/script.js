@@ -8,6 +8,7 @@ const finalScoreElement = document.getElementById('final-score');
 const startBtn = document.getElementById('start-btn');
 const restartBtn = document.getElementById('restart-btn');
 const resetBtn = document.getElementById('reset-button');
+const speedBtn = document.getElementById('speed-btn');
 const startOverlay = document.getElementById('start-overlay');
 const gameOverOverlay = document.getElementById('game-over-overlay');
 
@@ -17,6 +18,10 @@ let mazeMap = new Map();
 let pathExitY = 3; 
 let isGameOver = false;
 let isMoving = false;
+
+// 속도 조절 변수
+let speedLevel = 1; // 1, 2, 3
+const speedDelays = { 1: 300, 2: 150, 3: 100 };
 
 // 초기 상태: 블러 처리
 boardContainer.classList.add('overlay-active');
@@ -133,7 +138,6 @@ async function movePlayer(dx, dy) {
         playerPos.x = nextX;
         playerPos.y = nextY;
 
-        // 점수 산정: 오른쪽으로 전진한 최대 거리를 점수로 사용
         score = Math.max(score, playerPos.x);
         updateScore();
         
@@ -147,7 +151,8 @@ async function movePlayer(dx, dy) {
         else if (arrow === 'left') { dx = -1; dy = 0; }
         else if (arrow === 'right') { dx = 1; dy = 0; }
 
-        await new Promise(r => setTimeout(r, 300));
+        // 현재 설정된 속도(지연 시간) 적용
+        await new Promise(r => setTimeout(r, speedDelays[speedLevel]));
         if (isGameOver) break;
     }
     isMoving = false;
@@ -179,11 +184,19 @@ function startGame() {
     renderView();
 }
 
+// 속도 변경 로직
+function toggleSpeed() {
+    speedLevel = (speedLevel % 3) + 1;
+    const arrows = "▷".repeat(speedLevel);
+    speedBtn.textContent = `Speed: ${arrows}`;
+}
+
 renderView();
 
 startBtn.addEventListener('click', startGame);
 restartBtn.addEventListener('click', startGame);
 resetBtn.addEventListener('click', startGame);
+speedBtn.addEventListener('click', toggleSpeed);
 
 window.addEventListener('keydown', (e) => {
     if (isGameOver || isMoving || !startOverlay.classList.contains('hidden')) return;

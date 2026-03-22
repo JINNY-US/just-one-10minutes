@@ -20,6 +20,17 @@
     max-width: 700px; /* 가로형 보드에 맞춰 확장 */
 }
 
+/* 속도 조절 버튼 */
+#speed-control {
+    margin-bottom: 15px;
+}
+
+#speed-btn {
+    min-width: 120px;
+    padding: 8px 15px;
+    font-size: 0.9rem;
+}
+
 #board-container {
     position: relative;
     width: fit-content;
