@@ -15,7 +15,7 @@ const gameOverOverlay = document.getElementById('game-over-overlay');
 let score = 0;
 let playerPos = { x: 0, y: 3 }; 
 let mazeMap = new Map(); 
-let pathExitY = 3; // 이전 열에서 정답 경로가 도달한 Y 좌표
+let pathExitY = 3; 
 let isGameOver = false;
 let isMoving = false;
 
@@ -41,10 +41,13 @@ function generateColumn(x) {
 
     // 이번 열의 정답 경로 생성
     const entranceY = pathExitY;
-    const targetY = Math.floor(Math.random() * VIEW_H); // 이번 열에서 오른쪽으로 나갈 Y 좌표
+    // 빈칸 수를 줄이기 위해 수직 이동 거리를 최대 1칸으로 제한
+    let targetY = entranceY + (Math.floor(Math.random() * 3) - 1); // -1, 0, 1
+    targetY = Math.max(0, Math.min(VIEW_H - 1, targetY));
+    
     let columnPathKeys = new Set();
 
-    // entranceY에서 targetY까지 수동으로 이동해야 하는 구간을 빈칸(null)으로 설정
+    // 수직 연결 빈칸 생성 (최소화됨)
     let tempY = entranceY;
     while (true) {
         mazeMap.set(`${x},${tempY}`, null);
@@ -53,23 +56,22 @@ function generateColumn(x) {
         tempY += (targetY > tempY ? 1 : -1);
     }
 
-    // targetY 위치에 오른쪽 전진 화살표 배치 (단, 5열마다 한번은 멈추게 null 배치)
-    const isStopTile = (x % 5 === 0);
+    // 정답 경로 전진 화살표 (8열마다 한 번만 멈추도록 조정)
+    const isStopTile = (x % 8 === 0);
     if (!isStopTile) {
-        mazeMap.set(`${x},targetY_placeholder`, 'right'); // 아래에서 실제 좌표로 치환
         mazeMap.set(`${x},${targetY}`, 'right');
     } else {
         mazeMap.set(`${x},${targetY}`, null);
     }
     columnPathKeys.add(`${x},${targetY}`);
-    pathExitY = targetY; // 다음 열을 위한 출구 좌표 저장
+    pathExitY = targetY; 
 
-    // 나머지 타일은 함정 화살표로 채움
+    // 나머지 타일은 함정 화살표로만 채움 (빈칸 제거)
     for (let y = 0; y < VIEW_H; y++) {
         const key = `${x},${y}`;
         if (columnPathKeys.has(key)) continue;
 
-        // 함정: 주로 루프를 만들거나 벽으로 보냄
+        // 함정: 오직 화살표만 배치
         const trapDirs = ['up', 'down', 'left', 'right'];
         const dir = trapDirs[Math.floor(Math.random() * trapDirs.length)];
         mazeMap.set(key, dir);
@@ -120,7 +122,6 @@ async function movePlayer(dx, dy) {
         let nextX = playerPos.x + dx;
         let nextY = playerPos.y + dy;
 
-        // 벽 충돌 검사
         if (nextY < 0 || nextY >= VIEW_H || nextX < 0) {
             gameOver("벽에 부딪혔습니다!");
             break;
@@ -136,7 +137,6 @@ async function movePlayer(dx, dy) {
         playerPos.x = nextX;
         playerPos.y = nextY;
 
-        // 점수 산정: 새로운 열에 도달했을 때만 갱신
         if (playerPos.x > score) {
             score = playerPos.x;
             updateScore();
@@ -145,7 +145,7 @@ async function movePlayer(dx, dy) {
         renderView();
 
         const arrow = mazeMap.get(`${playerPos.x},${playerPos.y}`);
-        if (!arrow) break; // 빈칸 도착 (수동 조작 필요)
+        if (!arrow) break; 
 
         if (arrow === 'up') { dx = 0; dy = -1; }
         else if (arrow === 'down') { dx = 0; dy = 1; }
@@ -190,7 +190,6 @@ function toggleSpeed() {
     speedBtn.textContent = `Speed: ${arrows}`;
 }
 
-// 스와이프 제어 변수
 let touchStartX = 0;
 let touchStartY = 0;
 
@@ -201,13 +200,10 @@ function handleTouchStart(e) {
 
 function handleTouchEnd(e) {
     if (isGameOver || isMoving || !startOverlay.classList.contains('hidden')) return;
-
     const touchEndX = e.changedTouches[0].clientX;
     const touchEndY = e.changedTouches[0].clientY;
-
     const dx = touchEndX - touchStartX;
     const dy = touchEndY - touchStartY;
-
     const minSwipeDistance = 30;
 
     if (Math.abs(dx) > Math.abs(dy)) {
@@ -223,10 +219,8 @@ function handleTouchEnd(e) {
     }
 }
 
-// 초기 보드 보여주기
 renderView();
 
-// 이벤트 리스너 등록
 startBtn.addEventListener('click', startGame);
 restartBtn.addEventListener('click', startGame);
 resetBtn.addEventListener('click', startGame);
