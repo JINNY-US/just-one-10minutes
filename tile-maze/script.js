@@ -12,74 +12,71 @@ const startOverlay = document.getElementById('start-overlay');
 const gameOverOverlay = document.getElementById('game-over-overlay');
 
 let score = 0;
-let playerPos = { x: 0, y: 3 }; // 왼쪽 중앙 시작
-let mazeMap = new Map(); // "x,y" => direction
-let correctPath = []; // [{x, y}, ...]
+let playerPos = { x: 0, y: 3 }; 
+let mazeMap = new Map(); 
+let pathExitY = 3; // 이전 열의 정답 경로가 끝난 Y 좌표
 let isGameOver = false;
 let isMoving = false;
 
 // 초기 상태: 블러 처리
 boardContainer.classList.add('overlay-active');
 
-// 타일 생성 및 정답 경로 보장 로직
+// 타일 생성 로직
 function generateColumn(x) {
-    // 이미 생성된 열이면 통과
     if (mazeMap.has(`${x},0`)) return;
 
     if (x === 0) {
-        // 첫 번째 줄은 모두 빈칸 (어디서 시작할지 선택)
+        // 첫 번째 줄은 무조건 모두 빈칸으로 고정
         for (let y = 0; y < VIEW_H; y++) {
             mazeMap.set(`${x},${y}`, null);
         }
-        // 정답 경로의 시작점 결정 (랜덤하게 하나 선택)
-        const startY = Math.floor(Math.random() * VIEW_H);
-        correctPath = [{ x: 0, y: startY }];
-    } else {
-        const lastStep = correctPath[correctPath.length - 1];
-        
-        // 정답 경로 타일 결정 (이전 위치에서 위, 아래, 또는 오른쪽)
-        const possibleY = [lastStep.y];
-        if (lastStep.y > 0) possibleY.push(lastStep.y - 1);
-        if (lastStep.y < VIEW_H - 1) possibleY.push(lastStep.y + 1);
-        
-        const nextY = possibleY[Math.floor(Math.random() * possibleY.length)];
-        const nextStep = { x: x, y: nextY };
-        
-        // 이전 정답 타일의 화살표 방향 설정 (현재 정답 타일을 가리키게 함)
-        let dirToNext = 'right';
-        if (nextStep.y < lastStep.y) dirToNext = 'up';
-        else if (nextStep.y > lastStep.y) dirToNext = 'down';
-        
-        mazeMap.set(`${lastStep.x},${lastStep.y}`, dirToNext);
-        correctPath.push(nextStep);
+        // 시작 열(x=1)에서의 정답 입구 좌표 결정
+        pathExitY = Math.floor(Math.random() * VIEW_H);
+        return;
+    }
 
-        // 나머지 타일들은 함정으로 채움
-        for (let y = 0; y < VIEW_H; y++) {
-            const key = `${x},${y}`;
-            if (mazeMap.has(key)) continue; // 정답 경로는 건너뜀
+    // 이번 열에서 정답 경로 생성
+    const entranceY = pathExitY;
+    let currentY = entranceY;
+    let columnPathKeys = new Set();
 
-            const trapRoll = Math.random();
-            if (trapRoll < 0.1) {
-                mazeMap.set(key, null); // 10% 확률로 멈추는 칸
-            } else {
-                // 함정 방향: 루프를 위해 왼쪽으로 보내거나, 벽(위/아래)으로 보냄
-                const trapDirs = ['left', 'up', 'down'];
-                // 가끔 오른쪽으로 보내더라도 결국 루프로 이어지게 함
-                mazeMap.set(key, trapDirs[Math.floor(Math.random() * trapDirs.length)]);
-            }
+    // 1. 수직 이동 결정 (0~2칸)
+    if (Math.random() < 0.5) {
+        const moveCount = Math.floor(Math.random() * 2) + 1; // 1~2칸
+        const direction = Math.random() < 0.5 ? -1 : 1;
+        for (let i = 0; i < moveCount; i++) {
+            const nextY = currentY + direction;
+            if (nextY >= 0 && nextY < VIEW_H) {
+                mazeMap.set(`${x},${currentY}`, direction === -1 ? 'up' : 'down');
+                columnPathKeys.add(`${x},${currentY}`);
+                currentY = nextY;
+            } else break;
         }
+    }
+
+    // 2. 마지막엔 반드시 오른쪽으로 나가도록 설정
+    mazeMap.set(`${x},${currentY}`, 'right');
+    columnPathKeys.add(`${x},${currentY}`);
+    pathExitY = currentY; // 다음 열을 위해 출구 좌표 저장
+
+    // 3. 나머지 타일은 함정으로 채움
+    for (let y = 0; y < VIEW_H; y++) {
+        const key = `${x},${y}`;
+        if (columnPathKeys.has(key)) continue;
+
+        // 함정은 주로 루프(left)나 벽(up, down)을 향하게 함
+        const trapDirs = ['up', 'down', 'left', 'right'];
+        const dir = trapDirs[Math.floor(Math.random() * trapDirs.length)];
+        mazeMap.set(key, dir);
     }
 }
 
-// 뷰포트 렌더링 (플레이어의 x가 변하면 화면도 따라감)
 function renderView() {
     gameBoard.innerHTML = '';
-    // 플레이어가 화면 중앙 근처에 오도록 보정 (또는 왼쪽 고정 확장)
     const scrollX = Math.max(0, playerPos.x - 5);
 
     for (let y = 0; y < VIEW_H; y++) {
         for (let x = scrollX; x < scrollX + VIEW_W; x++) {
-            // 보이지 않는 열 자동 생성
             generateColumn(x);
             
             const tile = document.createElement('div');
@@ -118,7 +115,7 @@ async function movePlayer(dx, dy) {
         let nextX = playerPos.x + dx;
         let nextY = playerPos.y + dy;
 
-        // 벽 충돌 검사 (세로 범위 밖)
+        // 벽 충돌 검사
         if (nextY < 0 || nextY >= VIEW_H || nextX < 0) {
             gameOver("벽에 부딪혔습니다!");
             break;
@@ -131,14 +128,26 @@ async function movePlayer(dx, dy) {
         }
         pathTrace.add(state);
 
+        // 점수 계산 로직 개선
+        const currentTileDir = mazeMap.get(`${playerPos.x},${playerPos.y}`);
+        const nextTileDir = mazeMap.get(`${nextX},${nextY}`);
+        
+        // 화살표에서 출발하거나, 화살표로 들어가는 경우에만 점수 증가
+        const isFromArrow = currentTileDir !== null;
+        const isToArrow = nextTileDir !== null;
+
         playerPos.x = nextX;
         playerPos.y = nextY;
-        score++;
-        updateScore();
+
+        if (isFromArrow || isToArrow) {
+            score++;
+            updateScore();
+        }
+        
         renderView();
 
         const arrow = mazeMap.get(`${playerPos.x},${playerPos.y}`);
-        if (!arrow) break; // 정지 칸 도착
+        if (!arrow) break; // 빈칸(정지 타일) 도착
 
         if (arrow === 'up') { dx = 0; dy = -1; }
         else if (arrow === 'down') { dx = 0; dy = 1; }
@@ -168,7 +177,6 @@ function startGame() {
     score = 0;
     playerPos = { x: 0, y: 3 };
     mazeMap.clear();
-    correctPath = [];
     isGameOver = false;
     isMoving = false;
     updateScore();
@@ -178,7 +186,6 @@ function startGame() {
     renderView();
 }
 
-// 초기 보드 보여주기
 renderView();
 
 startBtn.addEventListener('click', startGame);
