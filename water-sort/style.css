@@ -86,9 +86,8 @@ body.dark .bottle {
 
 
 #start-overlay .btn {
-    width: 90%; /* 가로 길이 늘림 */
-    padding-top: 10px; /* 세로 길이 줄임 */
-    padding-bottom: 10px; /* 세로 길이 줄임 */
+    /* width를 제거하고 padding으로 너비를 제어하여 유연하게 만듭니다. */
+    padding: 12px 40px; 
     font-size: 1.5rem;
     white-space: nowrap; /* 텍스트가 한 줄에 나오도록 함 */
 }
