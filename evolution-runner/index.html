@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evolution Runner</title>
+    <link rel="stylesheet" href="../common-game.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <div id="info-ui">
+            <h2>Evolution Runner</h2>
+            <div class="info-box">
+                <div id="level-display">Level: 1</div>
+                <div id="score-display">Score: 0</div>
+            </div>
+        </div>
+        <div id="game-canvas-container"></div>
+        
+        <div id="start-message">마우스를 드래그하여<br>같은 레벨의 큐브를 모으세요!</div>
+
+        <!-- 게임 오버 화면 -->
+        <div id="game-over-screen" style="display: none;">
+            <h1>Game Over</h1>
+            <button id="restart-btn">재시작</button>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
