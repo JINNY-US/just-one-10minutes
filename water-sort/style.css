@@ -84,6 +84,14 @@ body.dark .bottle {
     border-radius: 12px;
 }
 
+
+#start-overlay .btn {
+    width: 80%;
+    padding-top: 15px;
+    padding-bottom: 15px;
+    font-size: 1.5rem;
+}
+
 body.dark #start-overlay {
     background-color: rgba(40, 43, 48, 0.9);
 }
