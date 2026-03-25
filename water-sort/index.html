@@ -16,28 +16,30 @@
     </div>
 
     <div class="game-container">
-        <div class="header">
-            <div id="score">Stage: 1</div>
-        </div>
-
-        <div id="game-area">
-            <div id="bottles-container">
-                <!-- 병들이 여기에 생성됩니다 -->
+        <h1>COLOR SORT</h1>
+        
+        <div id="board-container">
+            <div class="header">
+                <div id="score">Stage: 1</div>
             </div>
-        </div>
 
-        <div class="controls">
-            <button id="reset-btn">스테이지 재시작</button>
-            <a href="../index.html" class="home-btn">홈으로</a>
+            <div id="game-area">
+                <div id="bottles-container">
+                    <!-- 병들이 여기에 생성됩니다 -->
+                </div>
+            </div>
+
+            <!-- 시작 버튼 오버레이 -->
+            <div id="start-overlay">
+                <button id="start-btn" class="btn btn-accent">게임 시작</button>
+            </div>
         </div>
 
         <div id="message" class="message"></div>
 
-        <div id="start-overlay">
-            <div class="overlay-content" style="text-align: center; padding: 20px;">
-                <h2 style="font-size: 2.5rem; margin-bottom: 25px;">Color Sort</h2>
-                <button id="start-btn" style="padding: 15px 50px; font-size: 1.5rem; background-color: var(--accent-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">게임 시작</button>
-            </div>
+        <div class="controls">
+            <button id="reset-btn" class="btn btn-primary">스테이지 재시작</button>
+            <a href="../index.html" class="home-btn">홈으로</a>
         </div>
     </div>
 
