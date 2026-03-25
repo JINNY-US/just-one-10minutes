@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Gear Defense - JUST ONE 10 MINUTES</title>
+    <link rel="stylesheet" href="../common-game.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dark-toggle">
+        <label class="switch">
+            <input type="checkbox" id="darkModeToggle">
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <div class="game-container">
+        <h1>GEAR DEFENSE</h1>
+        
+        <div class="info-bar">
+            <div id="gold-display">
+                <span class="icon">💰</span>
+                <span id="gold">100</span>
+            </div>
+            <div id="wave-display">
+                <span class="icon">🌊</span>
+                Wave <span id="wave">1</span>
+            </div>
+            <div id="life-display">
+                <span class="icon">❤️</span>
+                <span id="lives">20</span>
+            </div>
+        </div>
+
+        <div id="board-container">
+            <canvas id="game-canvas"></canvas>
+            <div id="game-board"></div>
+        </div>
+
+        <div class="controls">
+            <button id="summon-btn" class="btn btn-accent">
+                소환 (<span id="summon-cost">10</span>💰)
+            </button>
+            <a href="../index.html" class="home-btn">홈으로</a>
+        </div>
+    </div>
+
+    <script src="../common-game.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
