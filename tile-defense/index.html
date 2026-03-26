@@ -80,12 +80,17 @@
             transition: all 0.2s;
             position: relative;
             user-select: none;
+            box-sizing: border-box;
         }
         body.dark .tile { background: #444; }
 
         .tile.active-dice { border: 2px solid var(--primary-color); box-shadow: 0 0 10px var(--primary-color); }
         .tile .level { font-size: 0.8rem; position: absolute; bottom: 5px; right: 8px; color: #777; }
         body.dark .tile .level { color: #aaa; }
+        
+        /* 드래그 상태 시각화 */
+        .tile.dragging { opacity: 0.5; transform: scale(0.9); }
+        .tile.drag-over { background: rgba(52, 152, 219, 0.3) !important; }
 
         canvas {
             position: absolute;
@@ -107,7 +112,6 @@
         .type-epic { background: #9b59b6 !important; color: white; }
         .type-legend { background: #f1c40f !important; color: #2c3e50; }
 
-        /* 시작 오버레이 스타일 조정 */
         #start-overlay {
             flex-direction: column;
             gap: 20px;
@@ -116,11 +120,11 @@
         .start-desc { font-size: 1rem; color: #777; margin-bottom: 10px; }
     </style>
 </head>
-<body class="dark"> <!-- 기본 다크모드 적용 -->
+<body class="dark">
 
 <div class="dark-toggle">
     <label class="switch">
-        <input type="checkbox" id="darkModeToggle" checked>
+        <input type="checkbox" id="darkModeToggle">
         <span class="slider"></span>
     </label>
 </div>
@@ -139,7 +143,7 @@
         
         <div id="start-overlay">
             <div class="start-title">Tile Defense</div>
-            <div class="start-desc">타일을 배치하고 웨이브를 막아내세요!</div>
+            <div class="start-desc">타일을 드래그하여 합성하고 웨이브를 막아내세요!</div>
             <button id="real-start-btn" class="btn btn-accent">게임 시작하기</button>
         </div>
     </div>
@@ -163,6 +167,7 @@
     let grid = Array(GRID_COLS * GRID_ROWS).fill(null);
     let isWaveRunning = false;
     let isGameStarted = false;
+    let draggedIdx = null;
     
     const types = [
         { name: 'common', icon: '⚪', color: '#bdc3c7', power: 10 },
@@ -199,12 +204,32 @@
     let bullets = [];
     let lastTime = 0;
 
+    // 다크모드 초기화 및 연동
+    function initDarkMode() {
+        const isDark = localStorage.getItem('darkMode') === 'true';
+        if (isDark) {
+            document.body.classList.add('dark');
+            document.getElementById('darkModeToggle').checked = true;
+        } else {
+            document.body.classList.remove('dark');
+            document.getElementById('darkModeToggle').checked = false;
+        }
+    }
+
     function initGrid() {
         gridEl.innerHTML = '';
         for (let i = 0; i < GRID_COLS * GRID_ROWS; i++) {
             const tile = document.createElement('div');
             tile.className = 'tile';
             tile.dataset.index = i;
+            
+            // 드래그 앤 드롭 이벤트 추가
+            tile.addEventListener('dragstart', (e) => handleDragStart(e, i));
+            tile.addEventListener('dragover', handleDragOver);
+            tile.addEventListener('dragleave', handleDragLeave);
+            tile.addEventListener('drop', (e) => handleDrop(e, i));
+            tile.addEventListener('dragend', handleDragEnd);
+
             gridEl.appendChild(tile);
         }
         renderGrid();
@@ -219,14 +244,68 @@
                 el.classList.add(`type-${data.type.name}`);
                 el.classList.add('active-dice');
                 el.innerHTML = `${data.type.icon}<span class="level">${data.level}</span>`;
+                el.draggable = true; // 타일이 있을 때만 드래그 가능
             } else {
                 el.innerHTML = '';
+                el.draggable = false;
             }
         });
+        updateUI();
+    }
+
+    function updateUI() {
         spEl.textContent = sp;
         costEl.textContent = cost;
         hpEl.textContent = hp;
         waveEl.textContent = wave;
+    }
+
+    // --- 드래그 핸들러 ---
+    function handleDragStart(e, idx) {
+        if (!grid[idx]) { e.preventDefault(); return; }
+        draggedIdx = idx;
+        e.currentTarget.classList.add('dragging');
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        if (e.currentTarget.classList.contains('tile')) {
+            e.currentTarget.classList.add('drag-over');
+        }
+    }
+
+    function handleDragLeave(e) {
+        e.currentTarget.classList.remove('drag-over');
+    }
+
+    function handleDragEnd(e) {
+        e.currentTarget.classList.remove('dragging');
+        document.querySelectorAll('.tile').forEach(t => t.classList.remove('drag-over'));
+    }
+
+    function handleDrop(e, targetIdx) {
+        e.preventDefault();
+        e.currentTarget.classList.remove('drag-over');
+        
+        if (draggedIdx === null || draggedIdx === targetIdx) return;
+        
+        const source = grid[draggedIdx];
+        const target = grid[targetIdx];
+
+        if (source && target && 
+            source.type.name === target.type.name && 
+            source.level === target.level && 
+            source.level < 7) {
+            
+            // 합성 성공
+            grid[targetIdx] = { 
+                type: source.type, // 타입 유지 (또는 랜덤 타입으로 변경 가능)
+                level: source.level + 1 
+            };
+            grid[draggedIdx] = null;
+            renderGrid();
+        }
+        draggedIdx = null;
     }
 
     function summonDice() {
@@ -275,6 +354,7 @@
                     if (e.targetPointIdx >= pathPoints.length) {
                         hp--;
                         e.dead = true;
+                        updateUI(); // 생명 감소 실시간 반영
                         if (hp <= 0) endGame();
                     }
                 } else {
@@ -323,11 +403,14 @@
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 
                 if (dist < b.speed) {
-                    b.target.hp -= b.damage;
-                    b.dead = true;
-                    if (b.target.hp <= 0 && !b.target.dead) {
-                        b.target.dead = true;
-                        sp += 10;
+                    if (!b.dead) {
+                        b.target.hp -= b.damage;
+                        b.dead = true;
+                        if (b.target.hp <= 0 && !b.target.dead) {
+                            b.target.dead = true;
+                            sp += 10;
+                            updateUI(); // SP 증가 실시간 반영
+                        }
                     }
                 } else {
                     b.x += (dx / dist) * b.speed;
@@ -398,8 +481,7 @@
                 isWaveRunning = false;
                 wave++;
                 sp += 50;
-                renderGrid();
-                // 잠시 후 다음 웨이브 자동 시작
+                updateUI();
                 setTimeout(startWave, 2000);
             }
         }, 500);
@@ -410,10 +492,11 @@
         location.reload();
     }
 
-    // 다크모드 토글
     const darkModeToggle = document.getElementById('darkModeToggle');
     darkModeToggle.addEventListener('change', () => {
-        document.body.classList.toggle('dark');
+        const isDark = darkModeToggle.checked;
+        document.body.classList.toggle('dark', isDark);
+        localStorage.setItem('darkMode', isDark);
     });
 
     realStartBtn.onclick = () => {
@@ -424,6 +507,7 @@
 
     summonBtn.onclick = summonDice;
 
+    initDarkMode();
     initGrid();
     requestAnimationFrame(update);
 </script>
