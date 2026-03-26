@@ -175,7 +175,8 @@ function spawnEnemy() {
         maxHp: enemyHp,
         speed: 1.5 + (wave * 0.1),
         radius: 12,
-        dead: false
+        dead: false,
+        distanceWalked: 0 // 이동 거리 추적
     });
 }
 
@@ -190,9 +191,11 @@ function update(time) {
             const dy = target.y - e.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
 
-            if (dist < e.speed * dt) {
+            const moveDist = e.speed * dt;
+            if (dist < moveDist) {
                 e.x = target.x;
                 e.y = target.y;
+                e.distanceWalked += dist; // 실제 이동한 만큼 추가
                 e.targetPointIdx++;
                 if (e.targetPointIdx >= pathPoints.length) {
                     hp--;
@@ -201,8 +204,11 @@ function update(time) {
                     if (hp <= 0) endGame();
                 }
             } else {
-                e.x += (dx / dist) * e.speed * dt;
-                e.y += (dy / dist) * e.speed * dt;
+                const vx = (dx / dist) * moveDist;
+                const vy = (dy / dist) * moveDist;
+                e.x += vx;
+                e.y += vy;
+                e.distanceWalked += moveDist; // 이동 거리 누적
             }
         });
 
@@ -210,30 +216,30 @@ function update(time) {
             if (!dice) return;
             const row = Math.floor(i / GRID_COLS);
             const col = i % GRID_COLS;
-            
+
             const gridRect = gridEl.getBoundingClientRect();
             const containerRect = document.getElementById('board-container').getBoundingClientRect();
-            
+
             const tx = (gridRect.left - containerRect.left) + col * (TILE_SIZE + GAP) + TILE_SIZE/2;
             const ty = (gridRect.top - containerRect.top) + row * (TILE_SIZE + GAP) + TILE_SIZE/2;
 
-            let closest = null;
-            let minDist = Infinity; // 사거리 무제한
+            // 맨 앞에 있는 적(가장 많이 이동한 적) 찾기
+            let targetEnemy = null;
+            let maxProgress = -1;
 
             enemies.forEach(e => {
-                const d = Math.sqrt((tx - e.x) ** 2 + (ty - e.y) ** 2);
-                if (d < minDist) {
-                    minDist = d;
-                    closest = e;
+                if (e.distanceWalked > maxProgress) {
+                    maxProgress = e.distanceWalked;
+                    targetEnemy = e;
                 }
             });
 
             // 공격 속도: 레벨에 비례 (기본 0.03 * 레벨)
             const attackChance = 0.03 * dice.level;
-            if (closest && Math.random() < attackChance) {
+            if (targetEnemy && Math.random() < attackChance) {
                 bullets.push({
                     x: tx, y: ty,
-                    target: closest,
+                    target: targetEnemy,
                     speed: 8,
                     damage: dice.type.power * dice.level,
                     color: dice.type.color,
@@ -241,7 +247,6 @@ function update(time) {
                 });
             }
         });
-
         bullets.forEach(b => {
             const dx = b.target.x - b.x;
             const dy = b.target.y - b.y;
