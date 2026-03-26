@@ -140,7 +140,9 @@ function handleDrop(e, targetIdx) {
     const source = grid[draggedIdx];
     const target = grid[targetIdx];
     if (source && target && source.type.name === target.type.name && source.level === target.level && source.level < 7) {
-        grid[targetIdx] = { type: source.type, level: source.level + 1 };
+        // 합성 시 랜덤 속성으로 변경
+        const randType = types[Math.floor(Math.random() * types.length)];
+        grid[targetIdx] = { type: randType, level: source.level + 1 };
         grid[draggedIdx] = null;
         renderGrid();
     }
