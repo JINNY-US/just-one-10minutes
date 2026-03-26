@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>타일 서클 디펜스</title>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --tile-bg: #333;
+            --primary-color: #3498db;
+            --danger-color: #e74c3c;
+            --text-color: #ffffff;
+        }
+        body {
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Pretendard', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+        #ui-header {
+            margin-top: 20px;
+            padding: 15px 25px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 15px;
+            display: flex;
+            gap: 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+        .stat-item span { color: var(--primary-color); }
+        #hp-val { color: var(--danger-color) !important; }
+
+        #game-container {
+            position: relative;
+            margin-top: 20px;
+            width: 600px;
+            height: 500px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(5, 70px);
+            grid-template-rows: repeat(3, 70px);
+            gap: 10px;
+            padding: 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            z-index: 5;
+        }
+
+        .tile {
+            width: 70px;
+            height: 70px;
+            background: var(--tile-bg);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+            position: relative;
+            user-select: none;
+        }
+        .tile:hover { transform: scale(1.05); background: #444; }
+        .tile.active { border-color: var(--primary-color); box-shadow: 0 0 15px var(--primary-color); }
+        .tile .level { font-size: 0.8rem; position: absolute; bottom: 5px; right: 8px; color: #aaa; }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        #controls {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+        }
+        button {
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--primary-color);
+            color: white;
+            box-shadow: 0 4px 0 #2980b9;
+        }
+        button:active { transform: translateY(3px); box-shadow: none; }
+        button:disabled { background: #555; box-shadow: 0 4px 0 #333; cursor: not-allowed; }
+
+        .type-common { background: #7f8c8d; }
+        .type-rare { background: #2ecc71; }
+        .type-epic { background: #9b59b6; }
+        .type-legend { background: #f1c40f; color: #333; }
+    </style>
+</head>
+<body>
+
+<div id="ui-header">
+    <div class="stat-item">SP: <span id="sp-val">100</span></div>
+    <div class="stat-item">비용: <span id="cost-val">10</span></div>
+    <div class="stat-item">LIFE: <span id="hp-val">10</span></div>
+    <div class="stat-item">WAVE: <span id="wave-val">1</span></div>
+</div>
+
+<div id="game-container">
+    <div id="grid"></div>
+    <canvas id="game-canvas" width="600" height="500"></canvas>
+</div>
+
+<div id="controls">
+    <button id="summon-btn">주사위 소환</button>
+    <button id="start-btn">웨이브 시작</button>
+</div>
+
+<script>
+    const GRID_COLS = 5;
+    const GRID_ROWS = 3;
+    const TILE_SIZE = 70;
+    const GAP = 10;
+    
+    let sp = 100;
+    let cost = 10;
+    let hp = 10;
+    let wave = 1;
+    let grid = Array(GRID_COLS * GRID_ROWS).fill(null);
+    let isWaveRunning = false;
+    
+    const types = [
+        { name: 'common', icon: '⚪', color: '#7f8c8d', power: 10 },
+        { name: 'rare', icon: '🟢', color: '#2ecc71', power: 18 },
+        { name: 'epic', icon: '🟣', color: '#9b59b6', power: 35 },
+        { name: 'legend', icon: '🟡', color: '#f1c40f', power: 70 }
+    ];
+
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+    const gridEl = document.getElementById('grid');
+    const spEl = document.getElementById('sp-val');
+    const costEl = document.getElementById('cost-val');
+    const hpEl = document.getElementById('hp-val');
+    const waveEl = document.getElementById('wave-val');
+    const summonBtn = document.getElementById('summon-btn');
+    const startBtn = document.getElementById('start-btn');
+
+    // 테두리 경로 생성 (그리드 주변 바깥쪽)
+    // 그리드가 5*3 (70+10)*5 - 10 = 390px 가로, (70+10)*3 - 10 = 230px 세로
+    // 컨테이너가 600*500 이므로 중앙 배치 기준 경로 설정
+    const centerX = 300;
+    const centerY = 250;
+    const pathHalfW = 240;
+    const pathHalfH = 160;
+
+    const pathPoints = [
+        { x: centerX - pathHalfW, y: centerY - pathHalfH }, // 좌상
+        { x: centerX + pathHalfW, y: centerY - pathHalfH }, // 우상
+        { x: centerX + pathHalfW, y: centerY + pathHalfH }, // 우하
+        { x: centerX - pathHalfW, y: centerY + pathHalfH }, // 좌하
+        { x: centerX - pathHalfW, y: centerY - pathHalfH }  // 다시 좌상 (루프 종료)
+    ];
+
+    let enemies = [];
+    let bullets = [];
+    let lastTime = 0;
+
+    function initGrid() {
+        gridEl.innerHTML = '';
+        for (let i = 0; i < GRID_COLS * GRID_ROWS; i++) {
+            const tile = document.createElement('div');
+            tile.className = 'tile';
+            tile.dataset.index = i;
+            tile.onclick = () => handleTileClick(i);
+            gridEl.appendChild(tile);
+        }
+        renderGrid();
+    }
+
+    function renderGrid() {
+        const tiles = document.querySelectorAll('.tile');
+        grid.forEach((data, i) => {
+            const el = tiles[i];
+            el.className = 'tile';
+            if (data) {
+                el.classList.add(`type-${data.type.name}`);
+                el.innerHTML = `${data.type.icon}<span class="level">${data.level}</span>`;
+            } else {
+                el.innerHTML = '';
+            }
+        });
+        spEl.textContent = sp;
+        costEl.textContent = cost;
+        hpEl.textContent = hp;
+        waveEl.textContent = wave;
+    }
+
+    function summonDice() {
+        if (sp < cost) return;
+        const emptyIndices = grid.map((v, i) => v === null ? i : null).filter(v => v !== null);
+        if (emptyIndices.length === 0) return;
+
+        const randIdx = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+        const randType = types[Math.random() < 0.1 ? 1 : 0]; // 초기엔 커먼/레어 위주
+        
+        grid[randIdx] = { type: randType, level: 1 };
+        sp -= cost;
+        cost += 5;
+        renderGrid();
+    }
+
+    function handleTileClick(idx) {
+        // 머지 로직 등 추가 가능 (현재는 소환 위주)
+    }
+
+    function spawnEnemy() {
+        const enemyHp = 50 + (wave * 30);
+        enemies.push({
+            x: pathPoints[0].x,
+            y: pathPoints[0].y,
+            targetPointIdx: 1,
+            hp: enemyHp,
+            maxHp: enemyHp,
+            speed: 1.5 + (wave * 0.1),
+            radius: 12,
+            distTraveled: 0
+        });
+    }
+
+    function update(time) {
+        const dt = (time - lastTime) / 16;
+        lastTime = time;
+
+        if (isWaveRunning) {
+            // 적 이동
+            enemies.forEach(e => {
+                const target = pathPoints[e.targetPointIdx];
+                const dx = target.x - e.x;
+                const dy = target.y - e.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < e.speed * dt) {
+                    e.x = target.x;
+                    e.y = target.y;
+                    e.targetPointIdx++;
+                    if (e.targetPointIdx >= pathPoints.length) {
+                        // 한 바퀴 완주
+                        hp--;
+                        e.dead = true;
+                        if (hp <= 0) endGame();
+                    }
+                } else {
+                    e.x += (dx / dist) * e.speed * dt;
+                    e.y += (dy / dist) * e.speed * dt;
+                }
+            });
+
+            // 총알 및 공격 로직
+            grid.forEach((dice, i) => {
+                if (!dice) return;
+                const row = Math.floor(i / GRID_COLS);
+                const col = i % GRID_COLS;
+                
+                // 타일의 실제 캔버스 좌표 계산
+                // 그리드는 중앙 배치되어 있음. gridEl의 위치를 기반으로 하거나 오프셋 계산
+                const gridRect = gridEl.getBoundingClientRect();
+                const containerRect = document.getElementById('game-container').getBoundingClientRect();
+                
+                const tx = (gridRect.left - containerRect.left) + col * (TILE_SIZE + GAP) + TILE_SIZE/2;
+                const ty = (gridRect.top - containerRect.top) + row * (TILE_SIZE + GAP) + TILE_SIZE/2;
+
+                // 가장 가까운 적 찾기
+                let closest = null;
+                let minDist = 150 + (dice.level * 20); // 사거리
+
+                enemies.forEach(e => {
+                    const d = Math.sqrt((tx - e.x) ** 2 + (ty - e.y) ** 2);
+                    if (d < minDist) {
+                        minDist = d;
+                        closest = e;
+                    }
+                });
+
+                if (closest && Math.random() < 0.05) {
+                    bullets.push({
+                        x: tx, y: ty,
+                        target: closest,
+                        speed: 7,
+                        damage: dice.type.power * dice.level,
+                        color: dice.type.color
+                    });
+                }
+            });
+
+            bullets.forEach(b => {
+                const dx = b.target.x - b.x;
+                const dy = b.target.y - b.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist < b.speed) {
+                    b.target.hp -= b.damage;
+                    b.dead = true;
+                    if (b.target.hp <= 0) {
+                        b.target.dead = true;
+                        sp += 5;
+                    }
+                } else {
+                    b.x += (dx / dist) * b.speed;
+                    b.y += (dy / dist) * b.speed;
+                }
+            });
+
+            enemies = enemies.filter(e => !e.dead);
+            bullets = bullets.filter(b => !b.dead);
+
+            if (enemies.length === 0 && isWaveRunning) {
+                // 웨이브 클리어 체크 (특정 수 이상 스폰 후)
+            }
+        }
+
+        draw();
+        requestAnimationFrame(update);
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 경로 그리기
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.moveTo(pathPoints[0].x, pathPoints[0].y);
+        for(let i=1; i<pathPoints.length; i++) ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // 적 그리기
+        enemies.forEach(e => {
+            ctx.fillStyle = '#e74c3c';
+            ctx.beginPath();
+            ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 체력바
+            ctx.fillStyle = '#444';
+            ctx.fillRect(e.x - 15, e.y - 20, 30, 4);
+            ctx.fillStyle = '#2ecc71';
+            ctx.fillRect(e.x - 15, e.y - 20, (e.hp / e.maxHp) * 30, 4);
+        });
+
+        // 총알 그리기
+        bullets.forEach(b => {
+            ctx.fillStyle = b.color;
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, 4, 0, Math.PI * 2);
+            ctx.fill();
+        });
+    }
+
+    function startWave() {
+        if (isWaveRunning) return;
+        isWaveRunning = true;
+        startBtn.disabled = true;
+        
+        let spawnCount = 0;
+        const maxSpawn = 10 + wave * 2;
+        const spawnInterval = setInterval(() => {
+            spawnEnemy();
+            spawnCount++;
+            if (spawnCount >= maxSpawn) {
+                clearInterval(spawnInterval);
+                checkWaveEnd();
+            }
+        }, 1000 - Math.min(500, wave * 50));
+    }
+
+    function checkWaveEnd() {
+        const checkInterval = setInterval(() => {
+            if (enemies.length === 0) {
+                clearInterval(checkInterval);
+                isWaveRunning = false;
+                wave++;
+                startBtn.disabled = false;
+                sp += 50; // 웨이브 보너스
+                renderGrid();
+            }
+        }, 500);
+    }
+
+    function endGame() {
+        alert(`게임 오버! 도달한 웨이브: ${wave}`);
+        location.reload();
+    }
+
+    summonBtn.onclick = summonDice;
+    startBtn.onclick = startWave;
+
+    initGrid();
+    requestAnimationFrame(update);
+</script>
+
+</body>
+</html>
