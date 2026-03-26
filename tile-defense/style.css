@@ -1,0 +1,112 @@
+:root {
+    --tile-bg: #333;
+    --primary-color: #3498db;
+    --danger-color: #e74c3c;
+}
+
+body {
+    margin: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--light-bg);
+}
+
+.game-container {
+    max-width: 650px;
+    width: 95%;
+    position: relative;
+    padding: 20px;
+}
+
+#ui-header {
+    display: flex;
+    justify-content: space-around;
+    padding: 15px;
+    background: rgba(0,0,0,0.05);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+body.dark #ui-header { background: rgba(255,255,255,0.05); }
+
+.stat-item span { color: var(--primary-color); }
+#hp-val { color: var(--danger-color) !important; }
+
+#board-container {
+    position: relative;
+    width: 600px;
+    height: 400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: visible;
+}
+
+#grid {
+    display: grid;
+    grid-template-columns: repeat(5, 70px);
+    grid-template-rows: repeat(3, 70px);
+    gap: 10px;
+    padding: 20px;
+    background: rgba(0,0,0,0.03);
+    border-radius: 15px;
+    z-index: 5;
+}
+body.dark #grid { background: rgba(255,255,255,0.05); }
+
+.tile {
+    width: 70px;
+    height: 70px;
+    background: #ddd;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    user-select: none;
+    box-sizing: border-box;
+    color: #2c3e50;
+}
+body.dark .tile { background: #444; color: #eee; }
+
+.tile.active-dice { border: 2px solid var(--primary-color); box-shadow: 0 0 10px var(--primary-color); }
+
+/* 드래그 상태 시각화 */
+.tile.dragging { opacity: 0.5; transform: scale(0.9); }
+.tile.drag-over { background: rgba(52, 152, 219, 0.3) !important; }
+
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 10;
+}
+
+#controls {
+    margin-top: 20px;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.type-common { background: #bdc3c7 !important; color: #2c3e50 !important; }
+.type-rare { background: #2ecc71 !important; color: white !important; }
+.type-epic { background: #9b59b6 !important; color: white !important; }
+.type-legend { background: #f1c40f !important; color: #2c3e50 !important; }
+
+#start-overlay {
+    flex-direction: column;
+    gap: 20px;
+}
+.start-title { font-size: 2rem; font-weight: bold; color: var(--primary-color); }
+.start-desc { font-size: 1rem; color: #777; margin-bottom: 10px; }
