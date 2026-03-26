@@ -21,6 +21,18 @@ body {
     padding: 20px;
 }
 
+.game-container h1 {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    margin-top: 10px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+body.dark .game-container h1 {
+    color: var(--primary-color);
+    text-shadow: 1px 1px 5px rgba(0,0,0,0.3);
+}
+
 #ui-header {
     display: flex;
     justify-content: space-around;
@@ -108,5 +120,4 @@ canvas {
     flex-direction: column;
     gap: 20px;
 }
-.start-title { font-size: 2rem; font-weight: bold; color: var(--primary-color); }
 .start-desc { font-size: 1rem; color: #777; margin-bottom: 10px; }

@@ -49,7 +49,7 @@ let lastTime = 0;
 
 // 다크모드 초기화 및 연동
 function initDarkMode() {
-    const isDark = localStorage.getItem('darkMode') === 'true';
+    const isDark = localStorage.getItem('darkMode') === 'on';
     if (isDark) {
         document.body.classList.add('dark');
         document.getElementById('darkModeToggle').checked = true;
@@ -339,9 +339,13 @@ function endGame() {
 
 const darkModeToggle = document.getElementById('darkModeToggle');
 darkModeToggle.addEventListener('change', () => {
-    const isDark = darkModeToggle.checked;
-    document.body.classList.toggle('dark', isDark);
-    localStorage.setItem('darkMode', isDark);
+    if (darkModeToggle.checked) {
+        document.body.classList.add('dark');
+        localStorage.setItem('darkMode', 'on');
+    } else {
+        document.body.classList.remove('dark');
+        localStorage.setItem('darkMode', 'off');
+    }
 });
 
 realStartBtn.onclick = () => {
