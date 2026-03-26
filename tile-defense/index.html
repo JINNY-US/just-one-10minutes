@@ -33,7 +33,7 @@
             font-size: 1.1rem;
             font-weight: bold;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            z-index: 10;
+            z-index: 20;
         }
         .stat-item span { color: var(--primary-color); }
         #hp-val { color: var(--danger-color) !important; }
@@ -84,13 +84,14 @@
             top: 0;
             left: 0;
             pointer-events: none;
-            z-index: 2;
+            z-index: 10; /* 타일(z-index:5) 위로 지나가게 설정 */
         }
 
         #controls {
             margin-top: 30px;
             display: flex;
             gap: 15px;
+            z-index: 20;
         }
         button {
             padding: 12px 25px;
@@ -162,20 +163,17 @@
     const summonBtn = document.getElementById('summon-btn');
     const startBtn = document.getElementById('start-btn');
 
-    // 테두리 경로 생성 (그리드 주변 바깥쪽)
-    // 그리드가 5*3 (70+10)*5 - 10 = 390px 가로, (70+10)*3 - 10 = 230px 세로
-    // 컨테이너가 600*500 이므로 중앙 배치 기준 경로 설정
     const centerX = 300;
     const centerY = 250;
     const pathHalfW = 240;
     const pathHalfH = 160;
 
     const pathPoints = [
-        { x: centerX - pathHalfW, y: centerY - pathHalfH }, // 좌상
-        { x: centerX + pathHalfW, y: centerY - pathHalfH }, // 우상
-        { x: centerX + pathHalfW, y: centerY + pathHalfH }, // 우하
-        { x: centerX - pathHalfW, y: centerY + pathHalfH }, // 좌하
-        { x: centerX - pathHalfW, y: centerY - pathHalfH }  // 다시 좌상 (루프 종료)
+        { x: centerX - pathHalfW, y: centerY - pathHalfH },
+        { x: centerX + pathHalfW, y: centerY - pathHalfH },
+        { x: centerX + pathHalfW, y: centerY + pathHalfH },
+        { x: centerX - pathHalfW, y: centerY + pathHalfH },
+        { x: centerX - pathHalfW, y: centerY - pathHalfH }
     ];
 
     let enemies = [];
@@ -218,17 +216,15 @@
         if (emptyIndices.length === 0) return;
 
         const randIdx = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
-        const randType = types[Math.random() < 0.1 ? 1 : 0]; // 초기엔 커먼/레어 위주
+        const randType = types[Math.random() < 0.1 ? 1 : 0];
         
         grid[randIdx] = { type: randType, level: 1 };
         sp -= cost;
-        cost += 5;
+        cost += 10; // 소환 시 비용 10 증가
         renderGrid();
     }
 
-    function handleTileClick(idx) {
-        // 머지 로직 등 추가 가능 (현재는 소환 위주)
-    }
+    function handleTileClick(idx) { }
 
     function spawnEnemy() {
         const enemyHp = 50 + (wave * 30);
@@ -240,7 +236,7 @@
             maxHp: enemyHp,
             speed: 1.5 + (wave * 0.1),
             radius: 12,
-            distTraveled: 0
+            dead: false
         });
     }
 
@@ -249,7 +245,6 @@
         lastTime = time;
 
         if (isWaveRunning) {
-            // 적 이동
             enemies.forEach(e => {
                 const target = pathPoints[e.targetPointIdx];
                 const dx = target.x - e.x;
@@ -261,7 +256,6 @@
                     e.y = target.y;
                     e.targetPointIdx++;
                     if (e.targetPointIdx >= pathPoints.length) {
-                        // 한 바퀴 완주
                         hp--;
                         e.dead = true;
                         if (hp <= 0) endGame();
@@ -272,23 +266,19 @@
                 }
             });
 
-            // 총알 및 공격 로직
             grid.forEach((dice, i) => {
                 if (!dice) return;
                 const row = Math.floor(i / GRID_COLS);
                 const col = i % GRID_COLS;
                 
-                // 타일의 실제 캔버스 좌표 계산
-                // 그리드는 중앙 배치되어 있음. gridEl의 위치를 기반으로 하거나 오프셋 계산
                 const gridRect = gridEl.getBoundingClientRect();
                 const containerRect = document.getElementById('game-container').getBoundingClientRect();
                 
                 const tx = (gridRect.left - containerRect.left) + col * (TILE_SIZE + GAP) + TILE_SIZE/2;
                 const ty = (gridRect.top - containerRect.top) + row * (TILE_SIZE + GAP) + TILE_SIZE/2;
 
-                // 가장 가까운 적 찾기
                 let closest = null;
-                let minDist = 150 + (dice.level * 20); // 사거리
+                let minDist = 180 + (dice.level * 20);
 
                 enemies.forEach(e => {
                     const d = Math.sqrt((tx - e.x) ** 2 + (ty - e.y) ** 2);
@@ -302,9 +292,10 @@
                     bullets.push({
                         x: tx, y: ty,
                         target: closest,
-                        speed: 7,
+                        speed: 8,
                         damage: dice.type.power * dice.level,
-                        color: dice.type.color
+                        color: dice.type.color,
+                        dead: false
                     });
                 }
             });
@@ -317,9 +308,9 @@
                 if (dist < b.speed) {
                     b.target.hp -= b.damage;
                     b.dead = true;
-                    if (b.target.hp <= 0) {
+                    if (b.target.hp <= 0 && !b.target.dead) {
                         b.target.dead = true;
-                        sp += 5;
+                        sp += 10; // 적 처치 시 10SP 획득
                     }
                 } else {
                     b.x += (dx / dist) * b.speed;
@@ -329,10 +320,6 @@
 
             enemies = enemies.filter(e => !e.dead);
             bullets = bullets.filter(b => !b.dead);
-
-            if (enemies.length === 0 && isWaveRunning) {
-                // 웨이브 클리어 체크 (특정 수 이상 스폰 후)
-            }
         }
 
         draw();
@@ -342,7 +329,6 @@
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 경로 그리기
         ctx.strokeStyle = 'rgba(255,255,255,0.1)';
         ctx.setLineDash([5, 5]);
         ctx.beginPath();
@@ -351,26 +337,26 @@
         ctx.stroke();
         ctx.setLineDash([]);
 
-        // 적 그리기
         enemies.forEach(e => {
             ctx.fillStyle = '#e74c3c';
             ctx.beginPath();
             ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
             ctx.fill();
             
-            // 체력바
             ctx.fillStyle = '#444';
             ctx.fillRect(e.x - 15, e.y - 20, 30, 4);
             ctx.fillStyle = '#2ecc71';
             ctx.fillRect(e.x - 15, e.y - 20, (e.hp / e.maxHp) * 30, 4);
         });
 
-        // 총알 그리기
         bullets.forEach(b => {
             ctx.fillStyle = b.color;
             ctx.beginPath();
             ctx.arc(b.x, b.y, 4, 0, Math.PI * 2);
             ctx.fill();
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 1;
+            ctx.stroke();
         });
     }
 
@@ -398,7 +384,7 @@
                 isWaveRunning = false;
                 wave++;
                 startBtn.disabled = false;
-                sp += 50; // 웨이브 보너스
+                sp += 50;
                 renderGrid();
             }
         }, 500);
