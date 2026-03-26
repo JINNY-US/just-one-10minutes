@@ -75,18 +75,18 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            font-size: 2.2rem;
+            font-weight: bold;
             cursor: pointer;
             transition: all 0.2s;
             position: relative;
             user-select: none;
             box-sizing: border-box;
+            color: #2c3e50;
         }
-        body.dark .tile { background: #444; }
+        body.dark .tile { background: #444; color: #eee; }
 
         .tile.active-dice { border: 2px solid var(--primary-color); box-shadow: 0 0 10px var(--primary-color); }
-        .tile .level { font-size: 0.8rem; position: absolute; bottom: 5px; right: 8px; color: #777; }
-        body.dark .tile .level { color: #aaa; }
         
         /* 드래그 상태 시각화 */
         .tile.dragging { opacity: 0.5; transform: scale(0.9); }
@@ -107,10 +107,10 @@
             justify-content: center;
         }
 
-        .type-common { background: #bdc3c7 !important; color: #2c3e50; }
-        .type-rare { background: #2ecc71 !important; color: white; }
-        .type-epic { background: #9b59b6 !important; color: white; }
-        .type-legend { background: #f1c40f !important; color: #2c3e50; }
+        .type-common { background: #bdc3c7 !important; color: #2c3e50 !important; }
+        .type-rare { background: #2ecc71 !important; color: white !important; }
+        .type-epic { background: #9b59b6 !important; color: white !important; }
+        .type-legend { background: #f1c40f !important; color: #2c3e50 !important; }
 
         #start-overlay {
             flex-direction: column;
@@ -170,10 +170,10 @@
     let draggedIdx = null;
     
     const types = [
-        { name: 'common', icon: '⚪', color: '#bdc3c7', power: 10 },
-        { name: 'rare', icon: '🟢', color: '#2ecc71', power: 18 },
-        { name: 'epic', icon: '🟣', color: '#9b59b6', power: 35 },
-        { name: 'legend', icon: '🟡', color: '#f1c40f', power: 70 }
+        { name: 'common', color: '#bdc3c7', power: 10 },
+        { name: 'rare', color: '#2ecc71', power: 18 },
+        { name: 'epic', color: '#9b59b6', power: 35 },
+        { name: 'legend', color: '#f1c40f', power: 70 }
     ];
 
     const canvas = document.getElementById('game-canvas');
@@ -243,7 +243,7 @@
             if (data) {
                 el.classList.add(`type-${data.type.name}`);
                 el.classList.add('active-dice');
-                el.innerHTML = `${data.type.icon}<span class="level">${data.level}</span>`;
+                el.innerHTML = data.level; // 숫자만 크게 표시
                 el.draggable = true; // 타일이 있을 때만 드래그 가능
             } else {
                 el.innerHTML = '';
