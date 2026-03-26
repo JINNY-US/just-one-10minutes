@@ -375,7 +375,7 @@
                 const ty = (gridRect.top - containerRect.top) + row * (TILE_SIZE + GAP) + TILE_SIZE/2;
 
                 let closest = null;
-                let minDist = 180 + (dice.level * 20);
+                let minDist = Infinity; // 사거리 무제한
 
                 enemies.forEach(e => {
                     const d = Math.sqrt((tx - e.x) ** 2 + (ty - e.y) ** 2);
@@ -385,7 +385,9 @@
                     }
                 });
 
-                if (closest && Math.random() < 0.05) {
+                // 공격 속도: 레벨에 비례 (기본 0.03 * 레벨)
+                const attackChance = 0.03 * dice.level;
+                if (closest && Math.random() < attackChance) {
                     bullets.push({
                         x: tx, y: ty,
                         target: closest,
