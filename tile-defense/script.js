@@ -10,14 +10,15 @@ let wave = 1;
 let grid = Array(GRID_COLS * GRID_ROWS).fill(null);
 let isWaveRunning = false;
 let isGameStarted = false;
+let isGameOver = false; // 게임 오버 중복 방지 플래그
 let draggedIdx = null;
 
 const types = [
-    { name: 'fire', color: '#e74c3c', power: 12, desc: '스플래시', level: 1 },
-    { name: 'electric', color: '#f1c40f', power: 10, desc: '체인', level: 1 },
-    { name: 'wind', color: '#3498db', power: 8, desc: '고속', level: 1 },
-    { name: 'poison', color: '#2ecc71', power: 6, desc: '독', level: 1 },
-    { name: 'ice', color: '#a29bfe', power: 7, desc: '감속', level: 1 }
+    { name: 'fire', color: '#e74c3c', power: 12, desc: '[불타일] 공격 시 타겟 주변에 스플래시 화염 데미지를 입힙니다.', level: 1 },
+    { name: 'electric', color: '#f1c40f', power: 10, desc: '[전기타일] 공격 시 타겟 포함 최대 3명의 적에게 연쇄 데미지(100%, 70%, 30%)를 입힙니다.', level: 1 },
+    { name: 'wind', color: '#3498db', power: 8, desc: '[바람타일] 매우 빠른 속도로 공격합니다.', level: 1 },
+    { name: 'poison', color: '#2ecc71', power: 6, desc: '[독타일] 지속 데미지를 입히며, 독이 없는 적을 우선적으로 공격합니다.', level: 1 },
+    { name: 'ice', color: '#a29bfe', power: 7, desc: '[얼음타일] 적의 이동 속도를 감소시킵니다. (최대 3중첩, 50% 감속)', level: 1 }
 ];
 
 const canvas = document.getElementById('game-canvas');
@@ -99,7 +100,6 @@ function updateUI() {
     hpEl.textContent = hp;
     waveEl.textContent = wave;
 
-    // 강화 버튼 활성화 상태 업데이트
     document.querySelectorAll('.upgrade-item').forEach(item => {
         const typeName = item.dataset.type;
         const typeData = types.find(t => t.name === typeName);
@@ -140,7 +140,6 @@ function handleDrop(e, targetIdx) {
     const source = grid[draggedIdx];
     const target = grid[targetIdx];
     if (source && target && source.type.name === target.type.name && source.level === target.level && source.level < 7) {
-        // 합성 시 랜덤 속성으로 변경
         const randType = types[Math.floor(Math.random() * types.length)];
         grid[targetIdx] = { type: randType, level: source.level + 1 };
         grid[draggedIdx] = null;
@@ -163,10 +162,12 @@ function summonDice() {
 
 function spawnEnemy() {
     const enemyHp = 50 + (wave * 30);
+    // 이동 속도 0.7배 적용
+    const baseSpeed = (1.5 + (wave * 0.1)) * 0.7;
     enemies.push({
         x: pathPoints[0].x, y: pathPoints[0].y,
         targetPointIdx: 1, hp: enemyHp, maxHp: enemyHp,
-        speed: 1.5 + (wave * 0.1), radius: 12, dead: false,
+        speed: baseSpeed, radius: 12, dead: false,
         distanceWalked: 0,
         poisonDamage: 0, poisonDuration: 0,
         iceStacks: 0, iceDuration: 0
@@ -177,7 +178,7 @@ function update(time) {
     const dt = (time - lastTime) / 16;
     lastTime = time;
 
-    if (isWaveRunning) {
+    if (isWaveRunning && !isGameOver) {
         enemies.forEach(e => {
             if (e.poisonDuration > 0) {
                 e.hp -= (e.poisonDamage / 60) * dt;
@@ -235,7 +236,6 @@ function update(time) {
                 targetEnemy = enemies.sort((a,b) => b.distanceWalked - a.distanceWalked)[0];
             }
 
-            // 강화 효과 적용: 바람 공속 (Lv1: 2x, Lv2: 2.2x, Lv3: 2.4x ...)
             let baseChance = 0.03 * dice.level;
             if (dice.type.name === 'wind') {
                 const typeData = types.find(t => t.name === 'wind');
@@ -282,7 +282,6 @@ function applyDamage(bullet) {
 
     switch(bullet.type) {
         case 'fire':
-            // 강화 효과: 스플래시 범위 (Lv1: 60, Lv2: 70, Lv3: 80 ...)
             const splashRange = 60 + (typeLevel - 1) * 10;
             enemies.forEach(e => {
                 const d = Math.sqrt((e.x - target.x)**2 + (e.y - target.y)**2);
@@ -293,7 +292,6 @@ function applyDamage(bullet) {
             });
             break;
         case 'electric':
-            // 강화 효과: 체인 데미지 증가 (Lv1: 70%/30%, Lv2: 75%/35%, Lv3: 80%/40% ...)
             const chain1Ratio = 0.7 + (typeLevel - 1) * 0.05;
             const chain2Ratio = 0.3 + (typeLevel - 1) * 0.05;
             let chained = [target];
@@ -310,14 +308,12 @@ function applyDamage(bullet) {
             chained.forEach(e => { if (e.hp <= 0 && !e.dead) { e.dead = true; sp += 10; updateUI(); } });
             break;
         case 'poison':
-            // 강화 효과: 도트 데미지 비율 증가 (Lv1: 0.5, Lv2: 0.6, Lv3: 0.7 ...)
             const poisonRatio = 0.5 + (typeLevel - 1) * 0.1;
             target.hp -= bullet.damage;
             target.poisonDamage = bullet.damage * poisonRatio;
             target.poisonDuration = 180;
             break;
         case 'ice':
-            // 강화 효과: 슬로우 지속 시간 증가 (Lv1: 120, Lv2: 140, Lv3: 160 ...)
             const slowDuration = 120 + (typeLevel - 1) * 20;
             target.hp -= bullet.damage;
             target.iceStacks = Math.min(3, (target.iceStacks || 0) + 1);
@@ -363,10 +359,12 @@ function draw() {
 }
 
 function startWave() {
+    if (isGameOver) return;
     isWaveRunning = true;
     let spawnCount = 0;
     const maxSpawn = 10 + wave * 2;
     const spawnInterval = setInterval(() => {
+        if (isGameOver) { clearInterval(spawnInterval); return; }
         spawnEnemy();
         spawnCount++;
         if (spawnCount >= maxSpawn) { clearInterval(spawnInterval); checkWaveEnd(); }
@@ -375,6 +373,7 @@ function startWave() {
 
 function checkWaveEnd() {
     const checkInterval = setInterval(() => {
+        if (isGameOver) { clearInterval(checkInterval); return; }
         if (enemies.length === 0) {
             clearInterval(checkInterval);
             isWaveRunning = false;
@@ -384,7 +383,12 @@ function checkWaveEnd() {
     }, 500);
 }
 
-function endGame() { alert(`게임 오버! 도달한 웨이브: ${wave}`); location.reload(); }
+function endGame() { 
+    if (isGameOver) return;
+    isGameOver = true;
+    alert(`게임 오버! 도달한 웨이브: ${wave}`); 
+    location.reload(); 
+}
 
 const darkModeToggle = document.getElementById('darkModeToggle');
 darkModeToggle.addEventListener('change', () => {
@@ -392,7 +396,16 @@ darkModeToggle.addEventListener('change', () => {
     else { document.body.classList.remove('dark'); localStorage.setItem('darkMode', 'off'); }
 });
 
-// 강화 버튼 클릭 이벤트 리스너 등록
+// 강화 패널 아이콘 클릭 시 설명 표시
+document.querySelectorAll('.upgrade-icon').forEach(icon => {
+    icon.style.cursor = 'pointer';
+    icon.onclick = (e) => {
+        const typeName = e.target.closest('.upgrade-item').dataset.type;
+        const typeData = types.find(t => t.name === typeName);
+        alert(typeData.desc);
+    };
+});
+
 document.querySelectorAll('.upgrade-btn').forEach(btn => {
     btn.onclick = (e) => {
         const typeName = e.target.closest('.upgrade-item').dataset.type;
