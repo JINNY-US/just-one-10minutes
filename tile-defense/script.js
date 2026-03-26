@@ -13,10 +13,11 @@ let isGameStarted = false;
 let draggedIdx = null;
 
 const types = [
-    { name: 'common', color: '#bdc3c7', power: 10 },
-    { name: 'rare', color: '#2ecc71', power: 18 },
-    { name: 'epic', color: '#9b59b6', power: 35 },
-    { name: 'legend', color: '#f1c40f', power: 70 }
+    { name: 'fire', color: '#e74c3c', power: 12, desc: '스플래시' },
+    { name: 'electric', color: '#f1c40f', power: 10, desc: '체인' },
+    { name: 'wind', color: '#3498db', power: 8, desc: '고속' },
+    { name: 'poison', color: '#2ecc71', power: 6, desc: '독' },
+    { name: 'ice', color: '#a29bfe', power: 7, desc: '감속' }
 ];
 
 const canvas = document.getElementById('game-canvas');
@@ -47,7 +48,6 @@ let enemies = [];
 let bullets = [];
 let lastTime = 0;
 
-// 다크모드 초기화 및 연동
 function initDarkMode() {
     const isDark = localStorage.getItem('darkMode') === 'on';
     if (isDark) {
@@ -65,14 +65,11 @@ function initGrid() {
         const tile = document.createElement('div');
         tile.className = 'tile';
         tile.dataset.index = i;
-        
-        // 드래그 앤 드롭 이벤트 추가
         tile.addEventListener('dragstart', (e) => handleDragStart(e, i));
         tile.addEventListener('dragover', handleDragOver);
         tile.addEventListener('dragleave', handleDragLeave);
         tile.addEventListener('drop', (e) => handleDrop(e, i));
         tile.addEventListener('dragend', handleDragEnd);
-
         gridEl.appendChild(tile);
     }
     renderGrid();
@@ -86,8 +83,8 @@ function renderGrid() {
         if (data) {
             el.classList.add(`type-${data.type.name}`);
             el.classList.add('active-dice');
-            el.innerHTML = data.level; // 숫자만 크게 표시
-            el.draggable = true; // 타일이 있을 때만 드래그 가능
+            el.innerHTML = data.level;
+            el.draggable = true;
         } else {
             el.innerHTML = '';
             el.draggable = false;
@@ -103,7 +100,6 @@ function updateUI() {
     waveEl.textContent = wave;
 }
 
-// --- 드래그 핸들러 ---
 function handleDragStart(e, idx) {
     if (!grid[idx]) { e.preventDefault(); return; }
     draggedIdx = idx;
@@ -129,22 +125,11 @@ function handleDragEnd(e) {
 function handleDrop(e, targetIdx) {
     e.preventDefault();
     e.currentTarget.classList.remove('drag-over');
-    
     if (draggedIdx === null || draggedIdx === targetIdx) return;
-    
     const source = grid[draggedIdx];
     const target = grid[targetIdx];
-
-    if (source && target && 
-        source.type.name === target.type.name && 
-        source.level === target.level && 
-        source.level < 7) {
-        
-        // 합성 성공
-        grid[targetIdx] = { 
-            type: source.type, // 타입 유지 (또는 랜덤 타입으로 변경 가능)
-            level: source.level + 1 
-        };
+    if (source && target && source.type.name === target.type.name && source.level === target.level && source.level < 7) {
+        grid[targetIdx] = { type: source.type, level: source.level + 1 };
         grid[draggedIdx] = null;
         renderGrid();
     }
@@ -155,10 +140,8 @@ function summonDice() {
     if (sp < cost || !isGameStarted) return;
     const emptyIndices = grid.map((v, i) => v === null ? i : null).filter(v => v !== null);
     if (emptyIndices.length === 0) return;
-
     const randIdx = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
-    const randType = types[Math.random() < 0.15 ? 1 : 0];
-    
+    const randType = types[Math.floor(Math.random() * types.length)];
     grid[randIdx] = { type: randType, level: 1 };
     sp -= cost;
     cost += 10;
@@ -168,15 +151,12 @@ function summonDice() {
 function spawnEnemy() {
     const enemyHp = 50 + (wave * 30);
     enemies.push({
-        x: pathPoints[0].x,
-        y: pathPoints[0].y,
-        targetPointIdx: 1,
-        hp: enemyHp,
-        maxHp: enemyHp,
-        speed: 1.5 + (wave * 0.1),
-        radius: 12,
-        dead: false,
-        distanceWalked: 0 // 이동 거리 추적
+        x: pathPoints[0].x, y: pathPoints[0].y,
+        targetPointIdx: 1, hp: enemyHp, maxHp: enemyHp,
+        speed: 1.5 + (wave * 0.1), radius: 12, dead: false,
+        distanceWalked: 0,
+        poisonDamage: 0, poisonDuration: 0,
+        iceStacks: 0, iceDuration: 0
     });
 }
 
@@ -186,81 +166,86 @@ function update(time) {
 
     if (isWaveRunning) {
         enemies.forEach(e => {
+            // 디버프 처리 (초당 60프레임 기준)
+            if (e.poisonDuration > 0) {
+                e.hp -= (e.poisonDamage / 60) * dt;
+                e.poisonDuration -= dt;
+            }
+            if (e.iceDuration > 0) {
+                e.iceDuration -= dt;
+                if (e.iceDuration <= 0) e.iceStacks = 0;
+            }
+
+            // 이동 처리 (슬로우 반영)
+            const slowFactor = 1 - (Math.min(3, e.iceStacks) * 0.166); // 3중첩 시 약 50% 감속
+            const currentSpeed = e.speed * slowFactor;
+
             const target = pathPoints[e.targetPointIdx];
             const dx = target.x - e.x;
             const dy = target.y - e.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
+            const moveDist = currentSpeed * dt;
 
-            const moveDist = e.speed * dt;
             if (dist < moveDist) {
-                e.x = target.x;
-                e.y = target.y;
-                e.distanceWalked += dist; // 실제 이동한 만큼 추가
+                e.x = target.x; e.y = target.y;
+                e.distanceWalked += dist;
                 e.targetPointIdx++;
                 if (e.targetPointIdx >= pathPoints.length) {
-                    hp--;
-                    e.dead = true;
-                    updateUI(); // 생명 감소 실시간 반영
+                    hp--; e.dead = true;
+                    updateUI();
                     if (hp <= 0) endGame();
                 }
             } else {
-                const vx = (dx / dist) * moveDist;
-                const vy = (dy / dist) * moveDist;
-                e.x += vx;
-                e.y += vy;
-                e.distanceWalked += moveDist; // 이동 거리 누적
+                e.x += (dx / dist) * moveDist;
+                e.y += (dy / dist) * moveDist;
+                e.distanceWalked += moveDist;
             }
+            if (e.hp <= 0 && !e.dead) { e.dead = true; sp += 10; updateUI(); }
         });
 
         grid.forEach((dice, i) => {
             if (!dice) return;
             const row = Math.floor(i / GRID_COLS);
             const col = i % GRID_COLS;
-
-            const gridRect = gridEl.getBoundingClientRect();
             const containerRect = document.getElementById('board-container').getBoundingClientRect();
-
+            const gridRect = gridEl.getBoundingClientRect();
             const tx = (gridRect.left - containerRect.left) + col * (TILE_SIZE + GAP) + TILE_SIZE/2;
             const ty = (gridRect.top - containerRect.top) + row * (TILE_SIZE + GAP) + TILE_SIZE/2;
 
-            // 맨 앞에 있는 적(가장 많이 이동한 적) 찾기
             let targetEnemy = null;
-            let maxProgress = -1;
-
-            enemies.forEach(e => {
-                if (e.distanceWalked > maxProgress) {
-                    maxProgress = e.distanceWalked;
-                    targetEnemy = e;
+            if (dice.type.name === 'poison') {
+                // 독 없는 적 우선 공격
+                const nonPoisoned = enemies.filter(e => e.poisonDuration <= 0);
+                if (nonPoisoned.length > 0) {
+                    targetEnemy = nonPoisoned.sort((a,b) => b.distanceWalked - a.distanceWalked)[0];
+                } else {
+                    targetEnemy = enemies.sort((a,b) => b.distanceWalked - a.distanceWalked)[0];
                 }
-            });
+            } else {
+                targetEnemy = enemies.sort((a,b) => b.distanceWalked - a.distanceWalked)[0];
+            }
 
-            // 공격 속도: 레벨에 비례 (기본 0.03 * 레벨)
-            const attackChance = 0.03 * dice.level;
-            if (targetEnemy && Math.random() < attackChance) {
+            let baseChance = 0.03 * dice.level;
+            if (dice.type.name === 'wind') baseChance *= 2; // 바람은 2배 공속
+
+            if (targetEnemy && Math.random() < baseChance) {
                 bullets.push({
-                    x: tx, y: ty,
-                    target: targetEnemy,
-                    speed: 8,
+                    x: tx, y: ty, target: targetEnemy, speed: 10,
                     damage: dice.type.power * dice.level,
-                    color: dice.type.color,
-                    dead: false
+                    color: dice.type.color, type: dice.type.name,
+                    level: dice.level, dead: false
                 });
             }
         });
+
         bullets.forEach(b => {
             const dx = b.target.x - b.x;
             const dy = b.target.y - b.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            
             if (dist < b.speed) {
                 if (!b.dead) {
-                    b.target.hp -= b.damage;
                     b.dead = true;
-                    if (b.target.hp <= 0 && !b.target.dead) {
-                        b.target.dead = true;
-                        sp += 10;
-                        updateUI(); // SP 증가 실시간 반영
-                    }
+                    applyDamage(b);
                 }
             } else {
                 b.x += (dx / dist) * b.speed;
@@ -271,14 +256,58 @@ function update(time) {
         enemies = enemies.filter(e => !e.dead);
         bullets = bullets.filter(b => !b.dead);
     }
-
     draw();
     requestAnimationFrame(update);
 }
 
+function applyDamage(bullet) {
+    const target = bullet.target;
+    if (target.dead) return;
+
+    switch(bullet.type) {
+        case 'fire':
+            // 주변 스플래시
+            enemies.forEach(e => {
+                const d = Math.sqrt((e.x - target.x)**2 + (e.y - target.y)**2);
+                if (d < 60) {
+                    e.hp -= bullet.damage;
+                    if (e.hp <= 0 && !e.dead) { e.dead = true; sp += 10; updateUI(); }
+                }
+            });
+            break;
+        case 'electric':
+            // 체인 라이트닝 (3개 적)
+            let chained = [target];
+            target.hp -= bullet.damage;
+            let current = target;
+            for(let i=0; i<2; i++) {
+                let next = enemies.find(e => !e.dead && !chained.includes(e) && Math.sqrt((e.x-current.x)**2 + (e.y-current.y)**2) < 100);
+                if (next) {
+                    chained.push(next);
+                    next.hp -= bullet.damage * (i === 0 ? 0.7 : 0.3);
+                    current = next;
+                } else break;
+            }
+            chained.forEach(e => { if (e.hp <= 0 && !e.dead) { e.dead = true; sp += 10; updateUI(); } });
+            break;
+        case 'poison':
+            target.hp -= bullet.damage;
+            target.poisonDamage = bullet.damage * 0.5; // 도트뎀
+            target.poisonDuration = 180; // 3초
+            break;
+        case 'ice':
+            target.hp -= bullet.damage;
+            target.iceStacks = Math.min(3, (target.iceStacks || 0) + 1);
+            target.iceDuration = 120; // 2초
+            break;
+        default:
+            target.hp -= bullet.damage;
+    }
+    if (target.hp <= 0 && !target.dead) { target.dead = true; sp += 10; updateUI(); }
+}
+
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     ctx.strokeStyle = 'rgba(150,150,150,0.2)';
     ctx.setLineDash([5, 5]);
     ctx.beginPath();
@@ -289,6 +318,9 @@ function draw() {
 
     enemies.forEach(e => {
         ctx.fillStyle = '#e74c3c';
+        if (e.poisonDuration > 0) ctx.fillStyle = '#2ecc71';
+        if (e.iceStacks > 0) ctx.fillStyle = '#a29bfe';
+        
         ctx.beginPath();
         ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
         ctx.fill();
@@ -296,17 +328,14 @@ function draw() {
         ctx.fillStyle = '#444';
         ctx.fillRect(e.x - 15, e.y - 20, 30, 4);
         ctx.fillStyle = '#2ecc71';
-        ctx.fillRect(e.x - 15, e.y - 20, (e.hp / e.maxHp) * 30, 4);
+        ctx.fillRect(e.x - 15, e.y - 20, (Math.max(0, e.hp) / e.maxHp) * 30, 4);
     });
 
     bullets.forEach(b => {
         ctx.fillStyle = b.color;
         ctx.beginPath();
-        ctx.arc(b.x, b.y, 4, 0, Math.PI * 2);
+        ctx.arc(b.x, b.y, 5, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = 'white';
-        ctx.lineWidth = 1;
-        ctx.stroke();
     });
 }
 
@@ -317,10 +346,7 @@ function startWave() {
     const spawnInterval = setInterval(() => {
         spawnEnemy();
         spawnCount++;
-        if (spawnCount >= maxSpawn) {
-            clearInterval(spawnInterval);
-            checkWaveEnd();
-        }
+        if (spawnCount >= maxSpawn) { clearInterval(spawnInterval); checkWaveEnd(); }
     }, 1000 - Math.min(500, wave * 50));
 }
 
@@ -329,38 +355,22 @@ function checkWaveEnd() {
         if (enemies.length === 0) {
             clearInterval(checkInterval);
             isWaveRunning = false;
-            wave++;
-            sp += 50;
-            updateUI();
+            wave++; sp += 50; updateUI();
             setTimeout(startWave, 2000);
         }
     }, 500);
 }
 
-function endGame() {
-    alert(`게임 오버! 도달한 웨이브: ${wave}`);
-    location.reload();
-}
+function endGame() { alert(`게임 오버! 도달한 웨이브: ${wave}`); location.reload(); }
 
 const darkModeToggle = document.getElementById('darkModeToggle');
 darkModeToggle.addEventListener('change', () => {
-    if (darkModeToggle.checked) {
-        document.body.classList.add('dark');
-        localStorage.setItem('darkMode', 'on');
-    } else {
-        document.body.classList.remove('dark');
-        localStorage.setItem('darkMode', 'off');
-    }
+    if (darkModeToggle.checked) { document.body.classList.add('dark'); localStorage.setItem('darkMode', 'on'); }
+    else { document.body.classList.remove('dark'); localStorage.setItem('darkMode', 'off'); }
 });
 
-realStartBtn.onclick = () => {
-    startOverlay.style.display = 'none';
-    isGameStarted = true;
-    startWave();
-};
-
+realStartBtn.onclick = () => { startOverlay.style.display = 'none'; isGameStarted = true; startWave(); };
 summonBtn.onclick = summonDice;
-
 initDarkMode();
 initGrid();
 requestAnimationFrame(update);

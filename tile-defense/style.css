@@ -111,10 +111,11 @@ canvas {
     justify-content: center;
 }
 
-.type-common { background: #bdc3c7 !important; color: #2c3e50 !important; }
-.type-rare { background: #2ecc71 !important; color: white !important; }
-.type-epic { background: #9b59b6 !important; color: white !important; }
-.type-legend { background: #f1c40f !important; color: #2c3e50 !important; }
+.type-fire { background: #e74c3c !important; color: white !important; }
+.type-electric { background: #f1c40f !important; color: #2c3e50 !important; }
+.type-wind { background: #3498db !important; color: white !important; }
+.type-poison { background: #2ecc71 !important; color: white !important; }
+.type-ice { background: #a29bfe !important; color: white !important; }
 
 #start-overlay {
     flex-direction: column;
