@@ -13,11 +13,11 @@ let isGameStarted = false;
 let draggedIdx = null;
 
 const types = [
-    { name: 'fire', color: '#e74c3c', power: 12, desc: '스플래시' },
-    { name: 'electric', color: '#f1c40f', power: 10, desc: '체인' },
-    { name: 'wind', color: '#3498db', power: 8, desc: '고속' },
-    { name: 'poison', color: '#2ecc71', power: 6, desc: '독' },
-    { name: 'ice', color: '#a29bfe', power: 7, desc: '감속' }
+    { name: 'fire', color: '#e74c3c', power: 12, desc: '스플래시', level: 1 },
+    { name: 'electric', color: '#f1c40f', power: 10, desc: '체인', level: 1 },
+    { name: 'wind', color: '#3498db', power: 8, desc: '고속', level: 1 },
+    { name: 'poison', color: '#2ecc71', power: 6, desc: '독', level: 1 },
+    { name: 'ice', color: '#a29bfe', power: 7, desc: '감속', level: 1 }
 ];
 
 const canvas = document.getElementById('game-canvas');
@@ -98,6 +98,17 @@ function updateUI() {
     costEl.textContent = cost;
     hpEl.textContent = hp;
     waveEl.textContent = wave;
+
+    // 강화 버튼 활성화 상태 업데이트
+    document.querySelectorAll('.upgrade-item').forEach(item => {
+        const typeName = item.dataset.type;
+        const typeData = types.find(t => t.name === typeName);
+        const btn = item.querySelector('.upgrade-btn');
+        const lvDisplay = item.querySelector('.upgrade-level');
+        
+        lvDisplay.textContent = `Lv.${typeData.level}`;
+        btn.disabled = sp < 100;
+    });
 }
 
 function handleDragStart(e, idx) {
@@ -166,7 +177,6 @@ function update(time) {
 
     if (isWaveRunning) {
         enemies.forEach(e => {
-            // 디버프 처리 (초당 60프레임 기준)
             if (e.poisonDuration > 0) {
                 e.hp -= (e.poisonDamage / 60) * dt;
                 e.poisonDuration -= dt;
@@ -176,8 +186,7 @@ function update(time) {
                 if (e.iceDuration <= 0) e.iceStacks = 0;
             }
 
-            // 이동 처리 (슬로우 반영)
-            const slowFactor = 1 - (Math.min(3, e.iceStacks) * 0.166); // 3중첩 시 약 50% 감속
+            const slowFactor = 1 - (Math.min(3, e.iceStacks) * 0.166);
             const currentSpeed = e.speed * slowFactor;
 
             const target = pathPoints[e.targetPointIdx];
@@ -214,7 +223,6 @@ function update(time) {
 
             let targetEnemy = null;
             if (dice.type.name === 'poison') {
-                // 독 없는 적 우선 공격
                 const nonPoisoned = enemies.filter(e => e.poisonDuration <= 0);
                 if (nonPoisoned.length > 0) {
                     targetEnemy = nonPoisoned.sort((a,b) => b.distanceWalked - a.distanceWalked)[0];
@@ -225,8 +233,12 @@ function update(time) {
                 targetEnemy = enemies.sort((a,b) => b.distanceWalked - a.distanceWalked)[0];
             }
 
+            // 강화 효과 적용: 바람 공속 (Lv1: 2x, Lv2: 2.2x, Lv3: 2.4x ...)
             let baseChance = 0.03 * dice.level;
-            if (dice.type.name === 'wind') baseChance *= 2; // 바람은 2배 공속
+            if (dice.type.name === 'wind') {
+                const typeData = types.find(t => t.name === 'wind');
+                baseChance *= (2 + (typeData.level - 1) * 0.2);
+            }
 
             if (targetEnemy && Math.random() < baseChance) {
                 bullets.push({
@@ -264,19 +276,24 @@ function applyDamage(bullet) {
     const target = bullet.target;
     if (target.dead) return;
 
+    const typeLevel = types.find(t => t.name === bullet.type).level;
+
     switch(bullet.type) {
         case 'fire':
-            // 주변 스플래시
+            // 강화 효과: 스플래시 범위 (Lv1: 60, Lv2: 70, Lv3: 80 ...)
+            const splashRange = 60 + (typeLevel - 1) * 10;
             enemies.forEach(e => {
                 const d = Math.sqrt((e.x - target.x)**2 + (e.y - target.y)**2);
-                if (d < 60) {
+                if (d < splashRange) {
                     e.hp -= bullet.damage;
                     if (e.hp <= 0 && !e.dead) { e.dead = true; sp += 10; updateUI(); }
                 }
             });
             break;
         case 'electric':
-            // 체인 라이트닝 (3개 적)
+            // 강화 효과: 체인 데미지 증가 (Lv1: 70%/30%, Lv2: 75%/35%, Lv3: 80%/40% ...)
+            const chain1Ratio = 0.7 + (typeLevel - 1) * 0.05;
+            const chain2Ratio = 0.3 + (typeLevel - 1) * 0.05;
             let chained = [target];
             target.hp -= bullet.damage;
             let current = target;
@@ -284,21 +301,25 @@ function applyDamage(bullet) {
                 let next = enemies.find(e => !e.dead && !chained.includes(e) && Math.sqrt((e.x-current.x)**2 + (e.y-current.y)**2) < 100);
                 if (next) {
                     chained.push(next);
-                    next.hp -= bullet.damage * (i === 0 ? 0.7 : 0.3);
+                    next.hp -= bullet.damage * (i === 0 ? chain1Ratio : chain2Ratio);
                     current = next;
                 } else break;
             }
             chained.forEach(e => { if (e.hp <= 0 && !e.dead) { e.dead = true; sp += 10; updateUI(); } });
             break;
         case 'poison':
+            // 강화 효과: 도트 데미지 비율 증가 (Lv1: 0.5, Lv2: 0.6, Lv3: 0.7 ...)
+            const poisonRatio = 0.5 + (typeLevel - 1) * 0.1;
             target.hp -= bullet.damage;
-            target.poisonDamage = bullet.damage * 0.5; // 도트뎀
-            target.poisonDuration = 180; // 3초
+            target.poisonDamage = bullet.damage * poisonRatio;
+            target.poisonDuration = 180;
             break;
         case 'ice':
+            // 강화 효과: 슬로우 지속 시간 증가 (Lv1: 120, Lv2: 140, Lv3: 160 ...)
+            const slowDuration = 120 + (typeLevel - 1) * 20;
             target.hp -= bullet.damage;
             target.iceStacks = Math.min(3, (target.iceStacks || 0) + 1);
-            target.iceDuration = 120; // 2초
+            target.iceDuration = slowDuration;
             break;
         default:
             target.hp -= bullet.damage;
@@ -367,6 +388,20 @@ const darkModeToggle = document.getElementById('darkModeToggle');
 darkModeToggle.addEventListener('change', () => {
     if (darkModeToggle.checked) { document.body.classList.add('dark'); localStorage.setItem('darkMode', 'on'); }
     else { document.body.classList.remove('dark'); localStorage.setItem('darkMode', 'off'); }
+});
+
+// 강화 버튼 클릭 이벤트 리스너 등록
+document.querySelectorAll('.upgrade-btn').forEach(btn => {
+    btn.onclick = (e) => {
+        const typeName = e.target.closest('.upgrade-item').dataset.type;
+        const typeData = types.find(t => t.name === typeName);
+        
+        if (sp >= 100) {
+            sp -= 100;
+            typeData.level++;
+            updateUI();
+        }
+    };
 });
 
 realStartBtn.onclick = () => { startOverlay.style.display = 'none'; isGameStarted = true; startWave(); };

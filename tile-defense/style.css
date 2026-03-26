@@ -50,12 +50,62 @@ body.dark #ui-header { background: rgba(255,255,255,0.05); }
 #board-container {
     position: relative;
     width: 600px;
-    height: 400px;
+    height: 520px; /* 강화 패널 높이 고려하여 확장 */
     margin: 0 auto;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    justify-content: flex-start;
     align-items: center;
     overflow: visible;
+}
+
+#upgrade-panel {
+    width: 100%;
+    height: 100px;
+    margin-top: 10px;
+    background: rgba(0,0,0,0.05);
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 10px;
+    z-index: 5;
+}
+body.dark #upgrade-panel { background: rgba(255,255,255,0.05); }
+
+.upgrade-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+}
+
+.upgrade-icon {
+    width: 35px;
+    height: 35px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.upgrade-level {
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.upgrade-btn {
+    padding: 4px 8px !important;
+    font-size: 0.75rem !important;
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    border-radius: 5px !important;
+}
+.upgrade-btn:disabled {
+    background-color: #999 !important;
+    cursor: not-allowed;
 }
 
 #grid {
