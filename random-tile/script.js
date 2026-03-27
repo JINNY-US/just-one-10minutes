@@ -13,6 +13,11 @@ let isGameStarted = false;
 let isGameOver = false; // 게임 오버 중복 방지 플래그
 let draggedIdx = null;
 
+// 웨이브 10 단위마다 추가 SP 획득 (10, 20, 30... 웨이브부터 증가)
+function getKillSp() {
+    return 10 + Math.floor(wave / 10) * 10;
+}
+
 const types = [
     { name: 'fire', color: '#e74c3c', power: 12, desc: '[불타일] 공격 시 타겟 주변에 스플래시 화염 데미지를 입힙니다.', level: 1 },
     { name: 'electric', color: '#f1c40f', power: 10, desc: '[전기타일] 공격 시 타겟 포함 최대 3명의 적에게 연쇄 데미지(100%, 70%, 30%)를 입힙니다.', level: 1 },
@@ -212,7 +217,7 @@ function update(time) {
                 e.y += (dy / dist) * moveDist;
                 e.distanceWalked += moveDist;
             }
-            if (e.hp <= 0 && !e.dead) { e.dead = true; sp += 10; updateUI(); }
+            if (e.hp <= 0 && !e.dead) { e.dead = true; sp += getKillSp(); updateUI(); }
         });
 
         grid.forEach((dice, i) => {
@@ -287,7 +292,7 @@ function applyDamage(bullet) {
                 const d = Math.sqrt((e.x - target.x)**2 + (e.y - target.y)**2);
                 if (d < splashRange) {
                     e.hp -= bullet.damage;
-                    if (e.hp <= 0 && !e.dead) { e.dead = true; sp += 10; updateUI(); }
+                    if (e.hp <= 0 && !e.dead) { e.dead = true; sp += getKillSp(); updateUI(); }
                 }
             });
             break;
@@ -305,7 +310,7 @@ function applyDamage(bullet) {
                     current = next;
                 } else break;
             }
-            chained.forEach(e => { if (e.hp <= 0 && !e.dead) { e.dead = true; sp += 10; updateUI(); } });
+            chained.forEach(e => { if (e.hp <= 0 && !e.dead) { e.dead = true; sp += getKillSp(); updateUI(); } });
             break;
         case 'poison':
             const poisonRatio = 0.5 + (typeLevel - 1) * 0.1;
@@ -322,7 +327,7 @@ function applyDamage(bullet) {
         default:
             target.hp -= bullet.damage;
     }
-    if (target.hp <= 0 && !target.dead) { target.dead = true; sp += 10; updateUI(); }
+    if (target.hp <= 0 && !target.dead) { target.dead = true; sp += getKillSp(); updateUI(); }
 }
 
 function draw() {
@@ -377,7 +382,7 @@ function checkWaveEnd() {
         if (enemies.length === 0) {
             clearInterval(checkInterval);
             isWaveRunning = false;
-            wave++; sp += 50; updateUI();
+            wave++; sp += (50 + Math.floor(wave / 10) * 10); updateUI();
             setTimeout(startWave, 2000);
         }
     }, 500);
