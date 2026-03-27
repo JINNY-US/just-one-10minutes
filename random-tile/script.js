@@ -7,15 +7,43 @@ let sp = 100;
 let cost = 10;
 let hp = 10;
 let wave = 1;
+let gold = parseInt(localStorage.getItem('random-tile-gold')) || 0;
+
+// 영구 업그레이드 데이터 (로컬 스토리지 저장용)
+let upgrades = JSON.parse(localStorage.getItem('random-tile-upgrades')) || {
+    attack: 0,    // 공격력 증가 (Lv당 5%)
+    startSp: 0,   // 시작 SP 증가 (Lv당 20)
+    maxHp: 0,     // 최대 체력 증가 (Lv당 1)
+    goldBonus: 0  // 골드 획득 증가 (Lv당 10%)
+};
+
 let grid = Array(GRID_COLS * GRID_ROWS).fill(null);
 let isWaveRunning = false;
 let isGameStarted = false;
 let isGameOver = false; // 게임 오버 중복 방지 플래그
 let draggedIdx = null;
 
+const shopItems = [
+    { id: 'attack', name: '공격력 강화', desc: '모든 타일의 공격력이 5% 증가합니다.', baseCost: 100, costStep: 100 },
+    { id: 'startSp', name: '시작 자원', desc: '게임 시작 시 SP가 20 증가합니다.', baseCost: 150, costStep: 150 },
+    { id: 'maxHp', name: '내구도 강화', desc: '시작 체력이 1 증가합니다.', baseCost: 200, costStep: 200 },
+    { id: 'goldBonus', name: '골드 보너스', desc: '웨이브 보상 골드가 10% 증가합니다.', baseCost: 100, costStep: 100 }
+];
+
+function saveGameData() {
+    localStorage.setItem('random-tile-gold', gold);
+    localStorage.setItem('random-tile-upgrades', JSON.stringify(upgrades));
+}
+
 // 웨이브 10 단위마다 추가 SP 획득 (10, 20, 30... 웨이브부터 증가)
 function getKillSp() {
     return 10 + Math.floor(wave / 10) * 10;
+}
+
+function getWaveGold() {
+    const base = 20 + wave * 5;
+    const bonus = 1 + (upgrades.goldBonus * 0.1);
+    return Math.floor(base * bonus);
 }
 
 const types = [
@@ -30,10 +58,13 @@ const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
 const gridEl = document.getElementById('grid');
 const spEl = document.getElementById('sp-val');
+const goldEl = document.getElementById('gold-val');
 const costEl = document.getElementById('cost-val');
 const hpEl = document.getElementById('hp-val');
 const waveEl = document.getElementById('wave-val');
 const summonBtn = document.getElementById('summon-btn');
+const shopBtn = document.getElementById('shop-btn');
+const inventoryBtn = document.getElementById('inventory-btn');
 const startOverlay = document.getElementById('start-overlay');
 const realStartBtn = document.getElementById('real-start-btn');
 
@@ -101,6 +132,7 @@ function renderGrid() {
 
 function updateUI() {
     spEl.textContent = sp;
+    goldEl.textContent = gold;
     costEl.textContent = cost;
     hpEl.textContent = hp;
     waveEl.textContent = wave;
@@ -114,6 +146,81 @@ function updateUI() {
         lvDisplay.textContent = `Lv.${typeData.level}`;
         btn.disabled = sp < 100;
     });
+}
+
+// 모달 관련 기능
+function openModal(id) {
+    if (isWaveRunning) return alert('웨이브 중에는 이용할 수 없습니다.');
+    document.getElementById(id).style.display = 'flex';
+    if (id === 'shop-modal') renderShop();
+    if (id === 'inventory-modal') renderInventory();
+}
+
+function closeModal(id) {
+    document.getElementById(id).style.display = 'none';
+}
+
+function renderShop() {
+    const container = document.getElementById('shop-items');
+    container.innerHTML = '';
+    shopItems.forEach(item => {
+        const currentLv = upgrades[item.id];
+        const cost = item.baseCost + (currentLv * item.costStep);
+        const div = document.createElement('div');
+        div.className = 'shop-item';
+        div.innerHTML = `
+            <div class="item-info">
+                <span class="item-name">${item.name} (Lv.${currentLv})</span>
+                <span class="item-desc">${item.desc}</span>
+            </div>
+            <button class="btn-buy" onclick="buyUpgrade('${item.id}')" ${gold < cost ? 'disabled' : ''}>
+                ${cost} G
+            </button>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function renderInventory() {
+    const container = document.getElementById('inventory-items');
+    container.innerHTML = '';
+    shopItems.forEach(item => {
+        const currentLv = upgrades[item.id];
+        if (currentLv > 0) {
+            const div = document.createElement('div');
+            div.className = 'inventory-item';
+            div.innerHTML = `
+                <div class="item-info">
+                    <span class="item-name">${item.name}</span>
+                    <span class="item-desc">현재 레벨: Lv.${currentLv}</span>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+    });
+    if (container.innerHTML === '') container.innerHTML = '<p>보유 중인 강화가 없습니다.</p>';
+}
+
+window.buyUpgrade = function(id) {
+    const item = shopItems.find(i => i.id === id);
+    const cost = item.baseCost + (upgrades[id] * item.costStep);
+    if (gold >= cost) {
+        gold -= cost;
+        upgrades[id]++;
+        saveGameData();
+        updateUI();
+        renderShop();
+    }
+}
+
+window.closeModal = closeModal;
+
+shopBtn.onclick = () => openModal('shop-modal');
+inventoryBtn.onclick = () => openModal('inventory-modal');
+
+// 데미지 계산 시 영구 업그레이드 반영
+function getAdjustedDamage(baseDamage) {
+    return baseDamage * (1 + (upgrades.attack * 0.05));
 }
 
 function handleDragStart(e, idx) {
@@ -250,7 +357,7 @@ function update(time) {
             if (targetEnemy && Math.random() < baseChance) {
                 bullets.push({
                     x: tx, y: ty, target: targetEnemy, speed: 10,
-                    damage: dice.type.power * dice.level,
+                    damage: getAdjustedDamage(dice.type.power * dice.level),
                     color: dice.type.color, type: dice.type.name,
                     level: dice.level, dead: false
                 });
@@ -382,7 +489,12 @@ function checkWaveEnd() {
         if (enemies.length === 0) {
             clearInterval(checkInterval);
             isWaveRunning = false;
-            wave++; sp += (50 + Math.floor(wave / 10) * 10); updateUI();
+            const waveGold = getWaveGold();
+            gold += waveGold;
+            wave++; 
+            sp += (50 + Math.floor(wave / 10) * 10); 
+            saveGameData();
+            updateUI();
             setTimeout(startWave, 2000);
         }
     }, 500);
@@ -391,7 +503,8 @@ function checkWaveEnd() {
 function endGame() { 
     if (isGameOver) return;
     isGameOver = true;
-    alert(`게임 오버! 도달한 웨이브: ${wave}`); 
+    saveGameData(); // 게임 종료 시 골드 저장
+    alert(`게임 오버! 도달한 웨이브: ${wave}\n획득한 총 골드는 상점에서 사용 가능합니다.`); 
     location.reload(); 
 }
 
@@ -424,7 +537,15 @@ document.querySelectorAll('.upgrade-btn').forEach(btn => {
     };
 });
 
-realStartBtn.onclick = () => { startOverlay.style.display = 'none'; isGameStarted = true; startWave(); };
+realStartBtn.onclick = () => { 
+    startOverlay.style.display = 'none'; 
+    isGameStarted = true; 
+    // 영구 업그레이드 초기 적용
+    sp = 100 + (upgrades.startSp * 20);
+    hp = 10 + upgrades.maxHp;
+    updateUI();
+    startWave(); 
+};
 summonBtn.onclick = summonDice;
 initDarkMode();
 initGrid();

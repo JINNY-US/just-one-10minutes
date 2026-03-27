@@ -19,6 +19,7 @@
 <div class="game-container">
     <h1>Random Tile</h1>
     <div id="ui-header">
+        <div class="stat-item">GOLD: <span id="gold-val">0</span></div>
         <div class="stat-item">SP: <span id="sp-val">100</span></div>
         <div class="stat-item">비용: <span id="cost-val">10</span></div>
         <div class="stat-item">LIFE: <span id="hp-val">10</span></div>
@@ -35,37 +36,37 @@
         </div>
     </div>
 
+    <!-- 상점 모달 -->
+    <div id="shop-modal" class="modal">
+        <div class="modal-content">
+            <h2>타일 상점</h2>
+            <div id="shop-items">
+                <!-- 상점 아이템이 여기에 동적으로 생성됨 -->
+            </div>
+            <button class="btn btn-close" onclick="closeModal('shop-modal')">닫기</button>
+        </div>
+    </div>
+
+    <!-- 인벤토리 모달 -->
+    <div id="inventory-modal" class="modal">
+        <div class="modal-content">
+            <h2>인벤토리</h2>
+            <div id="inventory-items">
+                <!-- 인벤토리 아이템이 여기에 동적으로 생성됨 -->
+            </div>
+            <button class="btn btn-close" onclick="closeModal('inventory-modal')">닫기</button>
+        </div>
+    </div>
+
     <!-- 타일 강화 UI를 보드 바깥으로 이동 -->
     <div id="upgrade-panel">
-        <div class="upgrade-item" data-type="fire">
-            <div class="upgrade-icon type-fire">🔥</div>
-            <div class="upgrade-level">Lv.1</div>
-            <button class="upgrade-btn">100 SP</button>
-        </div>
-        <div class="upgrade-item" data-type="electric">
-            <div class="upgrade-icon type-electric">⚡</div>
-            <div class="upgrade-level">Lv.1</div>
-            <button class="upgrade-btn">100 SP</button>
-        </div>
-        <div class="upgrade-item" data-type="wind">
-            <div class="upgrade-icon type-wind">💨</div>
-            <div class="upgrade-level">Lv.1</div>
-            <button class="upgrade-btn">100 SP</button>
-        </div>
-        <div class="upgrade-item" data-type="poison">
-            <div class="upgrade-icon type-poison">🧪</div>
-            <div class="upgrade-level">Lv.1</div>
-            <button class="upgrade-btn">100 SP</button>
-        </div>
-        <div class="upgrade-item" data-type="ice">
-            <div class="upgrade-icon type-ice">❄️</div>
-            <div class="upgrade-level">Lv.1</div>
-            <button class="upgrade-btn">100 SP</button>
-        </div>
+        <!-- ... existing upgrade items ... -->
     </div>
 
     <div id="controls">
         <button id="summon-btn" class="btn btn-primary">타일 소환</button>
+        <button id="shop-btn" class="btn btn-warning">타일 상점</button>
+        <button id="inventory-btn" class="btn btn-info">인벤토리</button>
         <a href="../index.html" class="home-btn">돌아가기</a>
     </div>
 </div>
